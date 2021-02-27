@@ -11,15 +11,13 @@ var (
 
 // Service struct
 type Service struct {
-	c      *conf.Config
-	tracer opentracing.Tracer
+	c *conf.Config
 }
 
 // New init service
-func New(c *conf.Config, tracer opentracing.Tracer) (s *Service) {
+func New(c *conf.Config) (s *Service) {
 	s = &Service{
-		c:      c,
-		tracer: tracer,
+		c: c,
 	}
 	return s
 }

@@ -10,7 +10,6 @@ package main
 
 import (
 	"github.com/1024casts/snake-layout/internal/service"
-	"github.com/1024casts/snake/pkg/net/tracing"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
@@ -50,9 +49,6 @@ func main() {
 	app := snake.New(conf.Conf)
 	snake.App = app
 
-	// init db tracing plugin
-	//app.DB.Use(gormopentracing.New())
-
 	// Create the Gin engine.
 	router := app.Router
 
@@ -65,15 +61,8 @@ func main() {
 	// API Routes.
 	routers.Load(router)
 
-	// init tracer
-	tracer, closer := tracing.Init(conf.Conf.App.Name)
-	defer closer.Close()
-
-	// set into opentracing
-	opentracing.SetGlobalTracer(tracer)
-
 	// init service
-	svc := service.New(conf.Conf, tracer)
+	svc := service.New(conf.Conf)
 
 	// set global service
 	service.Svc = svc

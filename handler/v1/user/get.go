@@ -19,5 +19,5 @@ import (
 func Get(c *gin.Context) {
 	log.Info("Get user function called.")
 
-	api.SendResponse(c, nil, nil)
+	api.SendResponse(c, nil, c.Param("id"))
 }
