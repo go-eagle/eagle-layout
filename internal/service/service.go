@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/1024casts/snake/pkg/conf"
+	"github.com/go-eagle/eagle/pkg/conf"
 )
 
 var (

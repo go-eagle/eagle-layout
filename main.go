@@ -1,72 +1,96 @@
 /**
- *    ____          __
- *   / __/__  ___ _/ /_____
- *  _\ \/ _ \/ _ `/  '_/ -_)
- * /___/_//_/\_,_/_/\_\\__/
  *
- * generate by http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Snake
+ *    ____          __
+ *   / __/__ ____ _/ /__
+ *  / _// _ `/ _ `/ / -_)
+ * /___/\_,_/\_, /_/\__/
+ *         /___/
+ *
+ *
+ * generate by http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Eagle
  */
 package main
 
 import (
-	"github.com/1024casts/snake-layout/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/pflag"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
 
-	routers "github.com/1024casts/snake-layout/router"
-	"github.com/1024casts/snake/app/api"
-	"github.com/1024casts/snake/pkg/conf"
-	"github.com/1024casts/snake/pkg/snake"
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/pflag"
+	_ "go.uber.org/automaxprocs"
+
+	"github.com/go-eagle/eagle-layout/internal/server"
+	"github.com/go-eagle/eagle/pkg/app"
+	"github.com/go-eagle/eagle/pkg/conf"
+	logger "github.com/go-eagle/eagle/pkg/log"
+	"github.com/go-eagle/eagle/pkg/trace"
+	v "github.com/go-eagle/eagle/pkg/version"
 )
 
 var (
-	cfg = pflag.StringP("config", "c", "", "snake config file path.")
+	cfgFile = pflag.StringP("config", "c", "", "eagle config file path.")
+	version = pflag.BoolP("version", "v", false, "show version info.")
 )
 
-// @title snake docs api
+// @title eagle docs api
 // @version 1.0
-// @description snake demo
-
-// @contact.name 1024casts/snake
-// @contact.url http://www.swagger.io/support
-// @contact.email
+// @description eagle demo
 
 // @host localhost:8080
 // @BasePath /v1
 func main() {
 	pflag.Parse()
+	if *version {
+		ver := v.Get()
+		marshaled, err := json.MarshalIndent(&ver, "", "  ")
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Println(string(marshaled))
+		return
+	}
 
 	// init config
-	if err := conf.Init(*cfg); err != nil {
+	cfg, err := conf.Init(*cfgFile)
+	if err != nil {
+		panic(err)
+	}
+	logger.Init(&cfg.Logger)
+
+	// init tracer
+	_, err = trace.InitTracerProvider(cfg.Trace.ServiceName, cfg.Trace.Jaeger.CollectorEndpoint)
+	if err != nil {
 		panic(err)
 	}
 
-	// Set gin mode.
-	gin.SetMode(conf.Conf.App.RunMode)
+	gin.SetMode(conf.Conf.App.Mode)
 
-	// init app
-	app := snake.New(conf.Conf)
-	snake.App = app
+	// init pprof server
+	go func() {
+		fmt.Printf("Listening and serving PProf HTTP on %s\n", conf.Conf.App.PprofPort)
+		if err := http.ListenAndServe(conf.Conf.App.PprofPort, http.DefaultServeMux); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen ListenAndServe for PProf, err: %s", err.Error())
+		}
+	}()
 
-	// Create the Gin engine.
-	router := app.Router
+	app := app.New(cfg,
+		app.WithName(cfg.App.Name),
+		app.WithVersion(cfg.App.Version),
+		app.WithLogger(logger.GetLogger()),
+		app.Server(
+			// init http server
+			server.NewHttpServer(conf.Conf),
+			// init grpc server
+			//grpcSrv := server.NewGRPCServer(svc)
+		),
+	)
 
-	// HealthCheck 健康检查路由
-	router.GET("/health", api.HealthCheck)
-	// metrics router 可以在 prometheus 中进行监控
-	// 通过 grafana 可视化查看 prometheus 的监控数据，使用插件6671查看
-	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
-
-	// API Routes.
-	routers.Load(router)
-
-	// init service
-	svc := service.New(conf.Conf)
-
-	// set global service
-	service.Svc = svc
-
-	// start server
-	app.Run()
+	if err := app.Run(); err != nil {
+		panic(err)
+	}
 }
