@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	cfgFile = pflag.StringP("config", "c", "", "eagle config file path.")
+	cfgFile = pflag.StringP("config", "c", "config.local.yaml", "eagle config file path.")
 	version = pflag.BoolP("version", "v", false, "show version info.")
 )
 
