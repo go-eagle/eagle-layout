@@ -1,32 +1,24 @@
 package service
 
 import (
-	"github.com/go-eagle/eagle/pkg/conf"
+	"github.com/go-eagle/eagle-layout/internal/repository"
 )
 
-var (
-	// Svc global service var
-	Svc *Service
-)
+// Svc global var
+var Svc Service
 
-// Service struct
-type Service struct {
-	c *conf.Config
+// Service define all service
+type Service interface {
+}
+
+// service struct
+type service struct {
+	repo repository.Repository
 }
 
 // New init service
-func New(c *conf.Config) (s *Service) {
-	s = &Service{
-		c: c,
+func New(repo repository.Repository) Service {
+	return &service{
+		repo: repo,
 	}
-	return s
-}
-
-// Ping service
-func (s *Service) Ping() error {
-	return nil
-}
-
-// Close service
-func (s *Service) Close() {
 }

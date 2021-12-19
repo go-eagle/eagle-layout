@@ -22,16 +22,20 @@ import (
 	"github.com/spf13/pflag"
 	_ "go.uber.org/automaxprocs"
 
+	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
-	"github.com/go-eagle/eagle/pkg/app"
-	"github.com/go-eagle/eagle/pkg/conf"
+	"github.com/go-eagle/eagle-layout/internal/service"
+	eagle "github.com/go-eagle/eagle/pkg/app"
+	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
-	"github.com/go-eagle/eagle/pkg/trace"
+	"github.com/go-eagle/eagle/pkg/redis"
 	v "github.com/go-eagle/eagle/pkg/version"
 )
 
 var (
-	cfgFile = pflag.StringP("config", "c", "config.local.yaml", "eagle config file path.")
+	cfgDir  = pflag.StringP("config dir", "c", "config", "config path.")
+	env     = pflag.StringP("env name", "e", "", "env var name.")
 	version = pflag.BoolP("version", "v", false, "show version info.")
 )
 
@@ -56,37 +60,42 @@ func main() {
 	}
 
 	// init config
-	cfg, err := conf.Init(*cfgFile)
-	if err != nil {
+	c := config.New(*cfgDir, config.WithEnv(*env))
+	var cfg eagle.Config
+	if err := c.Load("app", &cfg); err != nil {
 		panic(err)
 	}
-	logger.Init(&cfg.Logger)
+	// set global
+	eagle.Conf = &cfg
 
-	// init tracer
-	_, err = trace.InitTracerProvider(cfg.Trace.ServiceName, cfg.Trace.Jaeger.CollectorEndpoint)
-	if err != nil {
-		panic(err)
-	}
+	// -------------- init resource -------------
+	logger.Init()
+	// init db
+	model.Init()
+	// init redis
+	redis.Init()
 
-	gin.SetMode(conf.Conf.App.Mode)
+	// init service
+	service.Svc = service.New(repository.New(model.GetDB()))
+
+	gin.SetMode(cfg.Mode)
 
 	// init pprof server
 	go func() {
-		fmt.Printf("Listening and serving PProf HTTP on %s\n", conf.Conf.App.PprofPort)
-		if err := http.ListenAndServe(conf.Conf.App.PprofPort, http.DefaultServeMux); err != nil && err != http.ErrServerClosed {
+		fmt.Printf("Listening and serving PProf HTTP on %s\n", cfg.PprofPort)
+		if err := http.ListenAndServe(cfg.PprofPort, http.DefaultServeMux); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen ListenAndServe for PProf, err: %s", err.Error())
 		}
 	}()
 
-	app := app.New(cfg,
-		app.WithName(cfg.App.Name),
-		app.WithVersion(cfg.App.Version),
-		app.WithLogger(logger.GetLogger()),
-		app.Server(
+	// start app
+	app := eagle.New(
+		eagle.WithName(cfg.Name),
+		eagle.WithVersion(cfg.Version),
+		eagle.WithLogger(logger.GetLogger()),
+		eagle.WithServer(
 			// init http server
-			server.NewHttpServer(conf.Conf),
-			// init grpc server
-			//grpcSrv := server.NewGRPCServer(svc)
+			server.NewHTTPServer(&cfg.HTTP),
 		),
 	)
 
