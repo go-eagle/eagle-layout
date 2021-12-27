@@ -9,7 +9,7 @@ var Svc Service
 
 // Service define all service
 type Service interface {
-	// here define biz service
+	Greeter() GreeterService
 }
 
 // service struct
@@ -22,4 +22,8 @@ func New(repo repository.Repository) Service {
 	return &service{
 		repo: repo,
 	}
+}
+
+func (s *service) Greeter() GreeterService {
+	return newGreeterService(s)
 }
