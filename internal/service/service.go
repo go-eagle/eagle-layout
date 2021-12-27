@@ -9,6 +9,7 @@ var Svc Service
 
 // Service define all service
 type Service interface {
+	// here define biz service
 }
 
 // service struct
