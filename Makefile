@@ -15,6 +15,11 @@ PKG := "$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
+# proto
+APP_RELATIVE_PATH=$(shell a=`basename $$PWD` && cd .. && b=`basename $$PWD` && echo $$b/$$a)
+INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
+API_PROTO_FILES=$(shell cd ../../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
+
 # init environment variables
 export PATH        := $(shell go env GOPATH)/bin:$(PATH)
 export GOPATH      := $(shell go env GOPATH)
@@ -131,6 +136,38 @@ mockgen:
 		cd .. && mockgen -destination="./internal/mock/$$file" -source="./internal/$$file" && cd ./internal ; \
 	done
 
+.PHONY: init
+# init env
+init:
+	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
+	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	go get -v github.com/google/gnostic
+	go get -v github.com/google/gnostic/apps/protoc-gen-openapi
+
+.PHONY: proto
+# generate internal proto struct
+proto:
+	protoc --proto_path=. \
+           --proto_path=../../../third_party \
+           --go_out=paths=source_relative:. \
+           $(INTERNAL_PROTO_FILES)
+
+.PHONY: grpc
+# generate grpc code
+grpc:
+	 cd ../../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
+           --proto_path=../../../third_party \
+           --go_out=paths=source_relative:. \
+           --go-grpc_out=paths=source_relative:. \
+           $(API_PROTO_FILES)
+
+.PHONY: openapi
+# generate openapi
+openapi:
+ protoc --proto_path=. \
+        --proto_path=./third_party \
+        --openapi_out=. \
+        $(API_PROTO_FILES)
 
 # show help
 help:
