@@ -10,7 +10,7 @@ gitTreeState = $(shell if git status|grep -q 'clean';then echo clean; else echo 
 
 ldflags="-w -X ${versionDir}.gitTag=${gitTag} -X ${versionDir}.buildDate=${buildDate} -X ${versionDir}.gitCommit=${gitCommit} -X ${versionDir}.gitTreeState=${gitTreeState}"
 
-PROJECT_NAME := "github.com/go-eagle/eagle"
+PROJECT_NAME := "github.com/go-eagle/eagle-layout"
 PKG := "$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
@@ -164,7 +164,7 @@ grpc:
 .PHONY: openapi
 # generate openapi
 openapi:
- protoc --proto_path=. \
+	protoc --proto_path=. \
         --proto_path=./third_party \
         --openapi_out=. \
         $(API_PROTO_FILES)
