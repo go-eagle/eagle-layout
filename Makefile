@@ -16,9 +16,8 @@ PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
 # proto
-APP_RELATIVE_PATH=$(shell a=`basename $$PWD` && cd .. && b=`basename $$PWD` && echo $$b/$$a)
-INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
-API_PROTO_FILES=$(shell cd ../../../api/$(APP_RELATIVE_PATH) && find . -name *.proto)
+APP_RELATIVE_PATH=$(shell a=`basename $$PWD` && echo $$b)
+API_PROTO_FILES=$(shell find api$(APP_RELATIVE_PATH) -name *.proto)
 
 # init environment variables
 export PATH        := $(shell go env GOPATH)/bin:$(PATH)
@@ -145,18 +144,18 @@ init:
 	go get -v github.com/google/gnostic/apps/protoc-gen-openapi
 
 .PHONY: proto
-# generate internal proto struct
+# generate proto struct only
 proto:
-	protoc --proto_path=. \
-           --proto_path=../../../third_party \
+        protoc --proto_path=. \
+           --proto_path=./third_party \
            --go_out=paths=source_relative:. \
-           $(INTERNAL_PROTO_FILES)
+           $(API_PROTO_FILES)
 
 .PHONY: grpc
 # generate grpc code
 grpc:
-	 cd ../../../api/$(APP_RELATIVE_PATH) && protoc --proto_path=. \
-           --proto_path=../../../third_party \
+         protoc --proto_path=. \
+           --proto_path=./third_party \
            --go_out=paths=source_relative:. \
            --go-grpc_out=paths=source_relative:. \
            $(API_PROTO_FILES)
@@ -164,10 +163,10 @@ grpc:
 .PHONY: openapi
 # generate openapi
 openapi:
-	protoc --proto_path=. \
-        --proto_path=./third_party \
-        --openapi_out=. \
-        $(API_PROTO_FILES)
+        protoc --proto_path=. \
+          --proto_path=./third_party \
+          --openapi_out=. \
+          $(API_PROTO_FILES)
 
 # show help
 help:
