@@ -17,7 +17,6 @@ func NewHTTPServer(c *app.ServerConfig) *http.Server {
 	)
 
 	srv.Handler = router
-	// NOTE: register svc to http server
 
 	return srv
 }

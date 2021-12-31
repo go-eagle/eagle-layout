@@ -13,7 +13,7 @@ var (
 
 var _ Repository = (*repository)(nil)
 
-// Repository 定义用户仓库接口
+// Repository define a repo interface
 type Repository interface {
 }
 
