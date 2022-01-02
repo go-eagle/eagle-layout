@@ -4,7 +4,7 @@ package helloworld.greeter.v1;
 
 import "google/api/annotations.proto";
 
-option go_package="github.com/go-eagle/eagle-layout/api/helloworld/gretter/v1;v1";
+option go_package="github.com/go-eagle/eagle-layout/api/helloworld/greeter/v1;v1";
 
 // The greeting service definition.
 service Greeter {

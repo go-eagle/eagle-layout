@@ -146,24 +146,25 @@ init:
 .PHONY: proto
 # generate proto struct only
 proto:
-        protoc --proto_path=. \
+	protoc --proto_path=. \
            --proto_path=./third_party \
-           --go_out=paths=source_relative:. \
+           --go_out=. --go_opt=paths=source_relative \
            $(API_PROTO_FILES)
 
 .PHONY: grpc
 # generate grpc code
 grpc:
-         protoc --proto_path=. \
+	protoc --proto_path=. \
            --proto_path=./third_party \
-           --go_out=paths=source_relative:. \
-           --go-grpc_out=paths=source_relative:. \
+           --go_out=. --go_opt=paths=source_relative \
+           --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+           --go-gin_out=. --go-gin_opt=paths=source_relative \
            $(API_PROTO_FILES)
 
 .PHONY: openapi
 # generate openapi
 openapi:
-        protoc --proto_path=. \
+	protoc --proto_path=. \
           --proto_path=./third_party \
           --openapi_out=. \
           $(API_PROTO_FILES)

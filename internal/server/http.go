@@ -1,7 +1,9 @@
 package server
 
 import (
+	v1 "github.com/go-eagle/eagle-layout/api/helloworld/greeter/v1"
 	"github.com/go-eagle/eagle-layout/internal/routers"
+	"github.com/go-eagle/eagle-layout/internal/service"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/transport/http"
 )
@@ -17,6 +19,8 @@ func NewHTTPServer(c *app.ServerConfig) *http.Server {
 	)
 
 	srv.Handler = router
+
+	v1.RegisterGreeterHTTPServer(router, &service.GreeterGRPCService{})
 
 	return srv
 }

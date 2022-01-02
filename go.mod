@@ -11,5 +11,6 @@ require (
 	go.opentelemetry.io/otel v1.3.0
 	go.opentelemetry.io/otel/trace v1.3.0
 	go.uber.org/automaxprocs v1.4.0
+	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
 	gorm.io/gorm v1.20.12
 )
