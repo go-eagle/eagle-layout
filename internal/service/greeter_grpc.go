@@ -6,14 +6,14 @@ import (
 	pb "github.com/go-eagle/eagle-layout/api/helloworld/greeter/v1"
 )
 
-type GreeterGRPCService struct {
+type GreeterService struct {
 	pb.UnimplementedGreeterServer
 }
 
-func NewGreeterService() *GreeterGRPCService {
-	return &GreeterGRPCService{}
+func NewGreeterService() *GreeterService {
+	return &GreeterService{}
 }
 
-func (s *GreeterGRPCService) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
+func (s *GreeterService) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
 	return &pb.HelloReply{}, nil
 }

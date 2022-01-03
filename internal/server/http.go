@@ -20,7 +20,7 @@ func NewHTTPServer(c *app.ServerConfig) *http.Server {
 
 	srv.Handler = router
 
-	v1.RegisterGreeterHTTPServer(router, &service.GreeterGRPCService{})
+	v1.RegisterGreeterHTTPServer(router, &service.GreeterService{})
 
 	return srv
 }
