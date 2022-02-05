@@ -141,7 +141,7 @@ init:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
 	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	go get -v github.com/google/gnostic
-	go get -v github.com/google/gnostic/apps/protoc-gen-openapi
+	go get -v github.com/google/gnostic/cmd/protoc-gen-openapi
 
 .PHONY: proto
 # generate proto struct only
