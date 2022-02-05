@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-eagle/eagle v1.3.2-0.20211219121129-ca9690b72a53
+	github.com/google/wire v0.5.0 // indirect
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/pflag v1.0.5

@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-
-	"github.com/go-eagle/eagle-layout/internal/repository"
 )
 
 type IGreeterService interface {
@@ -12,13 +10,12 @@ type IGreeterService interface {
 }
 
 type greeterService struct {
-	repo repository.Repository
 }
 
 var _ IGreeterService = (*greeterService)(nil)
 
 func newGreeterService(svc *service) *greeterService {
-	return &greeterService{repo: svc.repo}
+	return &greeterService{}
 }
 
 func (s *greeterService) SayHi(ctx context.Context, name string) (string, error) {

@@ -1,37 +1,15 @@
 package repository
 
 import (
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/google/wire"
 	"gorm.io/gorm"
+
+	"github.com/go-eagle/eagle-layout/internal/model"
 )
 
-var (
-	// ErrNotFound data is not exist
-	ErrNotFound = gorm.ErrRecordNotFound
-)
+// ProviderSet is repo providers.
+var ProviderSet = wire.NewSet(NewGORMClient)
 
-var _ Repository = (*repository)(nil)
-
-// Repository define a repo interface
-type Repository interface {
-}
-
-// repository mysql struct
-type repository struct {
-	db     *gorm.DB
-	tracer trace.Tracer
-}
-
-// New new a repository and return
-func New(db *gorm.DB) Repository {
-	return &repository{
-		db:     db,
-		tracer: otel.Tracer("repository"),
-	}
-}
-
-// Close release mysql connection
-func (d *repository) Close() {
-
+func NewGORMClient() *gorm.DB {
+	return model.GetDB()
 }

@@ -19,18 +19,17 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/pflag"
-	_ "go.uber.org/automaxprocs"
-
-	"github.com/go-eagle/eagle-layout/internal/model"
-	"github.com/go-eagle/eagle-layout/internal/repository"
-	"github.com/go-eagle/eagle-layout/internal/server"
-	"github.com/go-eagle/eagle-layout/internal/service"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/redis"
+	"github.com/go-eagle/eagle/pkg/transport/grpc"
 	v "github.com/go-eagle/eagle/pkg/version"
+	"github.com/spf13/pflag"
+	_ "go.uber.org/automaxprocs"
+
+	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/server"
 )
 
 var (
@@ -75,9 +74,6 @@ func main() {
 	// init redis
 	redis.Init()
 
-	// init service
-	service.Svc = service.New(repository.New(model.GetDB()))
-
 	gin.SetMode(cfg.Mode)
 
 	// init pprof server
@@ -89,17 +85,25 @@ func main() {
 	}()
 
 	// start app
-	app := eagle.New(
+	app, err := InitApp(&cfg, &cfg.GRPC)
+	if err != nil {
+		panic(err)
+	}
+	if err := app.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func newApp(cfg *eagle.Config, gs *grpc.Server) *eagle.App {
+	return eagle.New(
 		eagle.WithName(cfg.Name),
 		eagle.WithVersion(cfg.Version),
 		eagle.WithLogger(logger.GetLogger()),
 		eagle.WithServer(
-			// init http server
+			// init HTTP server
 			server.NewHTTPServer(&cfg.HTTP),
+			// init gRPC server
+			gs,
 		),
 	)
-
-	if err := app.Run(); err != nil {
-		panic(err)
-	}
 }
