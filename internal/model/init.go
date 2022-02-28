@@ -2,17 +2,19 @@ package model
 
 import (
 	"fmt"
-
-	"gorm.io/gorm"
+	"sync"
 
 	"github.com/go-eagle/eagle/pkg/config"
 	"github.com/go-eagle/eagle/pkg/storage/orm"
+	"gorm.io/gorm"
 )
 
-// DB 数据库全局变量
-var DB *gorm.DB
+var (
+	DB   *gorm.DB
+	Once sync.Once
+)
 
-// Init 初始化数据库
+// Init init db
 func Init() *gorm.DB {
 	cfg, err := loadConf()
 	if err != nil {
@@ -23,8 +25,11 @@ func Init() *gorm.DB {
 	return DB
 }
 
-// GetDB 返回默认的数据库
+// GetDB get a db instance
 func GetDB() *gorm.DB {
+	Once.Do(func() {
+		DB = Init()
+	})
 	return DB
 }
 
