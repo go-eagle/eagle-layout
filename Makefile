@@ -18,6 +18,7 @@ GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 # proto
 APP_RELATIVE_PATH=$(shell a=`basename $$PWD` && echo $$b)
 API_PROTO_FILES=$(shell find api$(APP_RELATIVE_PATH) -name *.proto)
+API_PROTO_PB_FILES=$(shell find api$(APP_RELATIVE_PATH) -name *.pb.go)
 
 # init environment variables
 export PATH        := $(shell go env GOPATH)/bin:$(PATH)
@@ -138,10 +139,13 @@ mockgen:
 .PHONY: init
 # init env
 init:
-	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
-	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
-	go get -v github.com/google/gnostic
-	go get -v github.com/google/gnostic/cmd/protoc-gen-openapi
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install github.com/google/gnostic@latest
+	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
+	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
+	go install github.com/golang/mock/mockgen@latest
+	go install github.com/favadi/protoc-go-inject-tag@latest
 
 .PHONY: proto
 # generate proto struct only
@@ -169,6 +173,11 @@ http:
            --go-gin_out=. --go-gin_opt=paths=source_relative \
            $(API_PROTO_FILES)
 
+.PHONY: tag
+# add custom tag to pb struct
+tag:
+	protoc-go-inject-tag -input=$(API_PROTO_PB_FILES)
+
 .PHONY: openapi
 # generate openapi
 openapi:
@@ -176,6 +185,15 @@ openapi:
           --proto_path=./third_party \
           --openapi_out=. \
           $(API_PROTO_FILES)
+
+.PHONY: doc
+# generate html or markdown doc
+doc:
+	protoc --proto_path=. \
+          --proto_path=./third_party \
+	   	  --doc_out=. \
+	   	  --doc_opt=html,index.html \
+	   	  $(API_PROTO_FILES)
 
 # show help
 help:
