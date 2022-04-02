@@ -6,4 +6,4 @@ import (
 )
 
 // ProviderSet is repo providers.
-var ProviderSet = wire.NewSet(model.Init())
+var ProviderSet = wire.NewSet(model.Init)
