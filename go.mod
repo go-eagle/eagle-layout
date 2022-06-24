@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/gin-gonic/gin v1.7.2
-	github.com/go-eagle/eagle v1.4.1-0.20220212135746-5819a33442b6
+	github.com/go-eagle/eagle 0ed2b5db
 	github.com/go-redis/redis/v8 v8.11.4 // indirect
 	github.com/google/wire v0.5.0
 	github.com/hibiken/asynq v0.22.0

@@ -33,6 +33,12 @@ type Config struct {
 	PoolSize     int
 	PoolTimeout  time.Duration
 	Concurrency  int //并发数
+	Jobs         []Job
+}
+
+type Job struct {
+	Name     string
+	Schedule string
 }
 
 func GetClient() *asynq.Client {

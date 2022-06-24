@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
-	"time"
+
+	"github.com/go-eagle/eagle-layout/internal/server"
 
 	"github.com/go-eagle/eagle-layout/internal/model"
 	"github.com/go-eagle/eagle-layout/internal/tasks"
@@ -15,8 +15,6 @@ import (
 	"github.com/go-eagle/eagle/pkg/redis"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
-
-	"github.com/hibiken/asynq"
 )
 
 var (
@@ -25,7 +23,7 @@ var (
 	version = pflag.BoolP("version", "v", false, "show version info.")
 )
 
-func init() {
+func main() {
 	pflag.Parse()
 	if *version {
 		ver := v.Get()
@@ -54,57 +52,34 @@ func init() {
 	model.Init()
 	// init redis
 	redis.Init()
-}
 
-func main() {
 	// load config
-	c := config.New(*cfgDir, config.WithEnv(*env))
-	var cfg tasks.Config
+	c = config.New(*cfgDir, config.WithEnv(*env))
+	var taskCfg tasks.Config
 	if err := c.Load("cron", &cfg); err != nil {
 		panic(err)
 	}
 
-	// -------------- Run worker server ------------
-	go func() {
-		srv := asynq.NewServer(
-			asynq.RedisClientOpt{Addr: cfg.Addr},
-			asynq.Config{
-				// Specify how many concurrent workers to use
-				Concurrency: cfg.Concurrency,
-				// Optionally specify multiple queues with different priority.
-				Queues: map[string]int{
-					tasks.QueueCritical: 6,
-					tasks.QueueDefault:  3,
-					tasks.QueueLow:      1,
-				},
-				// See the godoc for other configuration options
-			},
-		)
+	// start app
+	app, err := InitApp(&taskCfg, &cfg.HTTP)
+	if err != nil {
+		panic(err)
+	}
+	if err := app.Run(); err != nil {
+		panic(err)
+	}
+}
 
-		// mux maps a type to a handler
-		mux := asynq.NewServeMux()
-		// register handlers...
-		mux.HandleFunc(tasks.TypeEmailWelcome, tasks.HandleEmailWelcomeTask)
-
-		if err := srv.Run(mux); err != nil {
-			log.Fatalf("could not run server: %v", err)
-		}
-	}()
-
-	// ------------- Run schedule server ------------
-	scheduler := asynq.NewScheduler(
-		asynq.RedisClientOpt{Addr: cfg.Addr},
-		&asynq.SchedulerOpts{Location: time.Local},
+func newApp(cfg *eagle.Config, cs *server.Server) *eagle.App {
+	return eagle.New(
+		eagle.WithName(cfg.Name),
+		eagle.WithVersion(cfg.Version),
+		eagle.WithLogger(logger.GetLogger()),
+		eagle.WithServer(
+			// init HTTP server
+			server.NewHTTPServer(&cfg.HTTP),
+			// init cron job server
+			cs,
+		),
 	)
-
-	// Register crontab task...
-	t, _ := tasks.NewEmailWelcomeTask(5)
-	if _, err := scheduler.Register("@every 5s", t); err != nil {
-		log.Fatal(err)
-	}
-
-	// Run blocks and waits for os signal to terminate the program.
-	if err := scheduler.Run(); err != nil {
-		log.Fatal(err)
-	}
 }

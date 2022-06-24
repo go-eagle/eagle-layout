@@ -1,0 +1,83 @@
+# yaml 配置
+# 官方文档：https://docs.docker.com/compose/compose-file/
+version: "3.7"
+
+services:
+  app:
+    container_name: app_container
+    build: .
+    restart: on-failure
+    depends_on:
+      - db
+      - redis
+    links:
+      - db
+      - redis
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: docker
+    networks:
+      - eagle
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]   # 用于健康检查的指令
+      interval: 1m30s   # 间隔时间
+      timeout: 10s  # 超时时间
+      retries: 3    # 重试次数
+      start_period: 40s # 启动多久后开始检查
+
+  db:
+    container_name: mysql_container
+    image: mysql:5.7.33
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: eagle
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: 123456
+      TZ: Asia/Shanghai
+    # 解决外部无法访问 for mysql8
+    command: [
+      '--character-set-server=utf8',
+      '--collation-server=utf8_unicode_ci',
+      '--default-authentication-plugin=mysql_native_password'
+    ]
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]   # 用于健康检查的指令
+      timeout: 20s  # 超时时间
+      retries: 10   # 重试次数
+      start_period: 40s # 启动多久后开始检查
+    stdin_open: true
+    tty: true
+    # 修复问题 mbind: Operation not permitted
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./deploy/docker/mysql/my.cnf:/etc/mysql/my.cnf
+      - ./deploy/docker/mysql/my.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+      - ./deploy/docker/mysql/:/docker-entrypoint-initdb.d/
+    networks:
+      - eagle
+
+  redis:
+    container_name: redis_container
+    image: redis:6.0.9-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - eagle
+    volumes:
+      - redis_data:/var/lib/redis
+
+networks:
+  eagle:
+    driver: "bridge"
+
+volumes:
+  mysql_data:
+  redis_data:
+  mongodb_data:

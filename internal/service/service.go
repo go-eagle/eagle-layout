@@ -1,22 +1,6 @@
 package service
 
-// Svc global var
-var Svc Service
+import "github.com/google/wire"
 
-// Service define all service
-type Service interface {
-	Greeter() IGreeterService
-}
-
-// service struct
-type service struct {
-}
-
-// New init service
-func New() Service {
-	return &service{}
-}
-
-func (s *service) Greeter() IGreeterService {
-	return newGreeterService(s)
-}
+// ProviderSet is service providers.
+var ProviderSet = wire.NewSet(NewGreeterService, NewCronJobService)
