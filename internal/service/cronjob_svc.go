@@ -1,11 +1,9 @@
 package service
 
 import (
-	"fmt"
+	"github.com/hibiken/asynq"
 
 	"github.com/go-eagle/eagle-layout/internal/tasks"
-
-	"github.com/hibiken/asynq"
 )
 
 var DefaultJobs map[string]*asynq.Task
@@ -19,12 +17,9 @@ func NewCronJobService() *CronJobService {
 	return &CronJobService{}
 }
 
+// RegisterTask register task
 func (s *CronJobService) RegisterTask() {
 	DefaultJobs = map[string]*asynq.Task{
-		"demo": tasks.NewDemoJobTask(),
+		tasks.TypeEmailWelcome: tasks.NewEmailWelcomeTask(1),
 	}
-}
-
-func (s *CronJobService) Demo() {
-	fmt.Println("this is a demo")
 }

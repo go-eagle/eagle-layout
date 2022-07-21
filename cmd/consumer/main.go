@@ -59,7 +59,7 @@ func main() {
 	// load config
 	c := config.New(*cfgDir, config.WithEnv(*env))
 	var cfg tasks.Config
-	if err := c.Load("cron", &cfg); err != nil {
+	if err := c.Load("cronjob", &cfg); err != nil {
 		panic(err)
 	}
 

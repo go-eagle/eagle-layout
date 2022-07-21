@@ -1,11 +1,8 @@
 package tasks
 
 import (
-	"log"
 	"sync"
 	"time"
-
-	"github.com/go-eagle/eagle/pkg/config"
 
 	"github.com/hibiken/asynq"
 )
@@ -41,12 +38,10 @@ type Job struct {
 	Schedule string
 }
 
-func GetClient() *asynq.Client {
+func NewClient(cfg *Config) *asynq.Client {
 	once.Do(func() {
-		c := config.New("config", config.WithEnv("local"))
-		var cfg Config
-		if err := c.Load("cron", &cfg); err != nil {
-			panic(err)
+		if cfg == nil {
+			panic("tasks client is nil")
 		}
 		client = asynq.NewClient(asynq.RedisClientOpt{
 			Addr:         cfg.Addr,
@@ -59,48 +54,4 @@ func GetClient() *asynq.Client {
 		})
 	})
 	return client
-}
-
-func Example() {
-	// ------------------------------------------------------
-	// Enqueue task to be processed immediately.
-	// Use (*Client).Enqueue method.
-	// ------------------------------------------------------
-	task, err := NewEmailWelcomeTask(1)
-	if err != nil {
-		log.Fatalf("could not create task: %v", err)
-	}
-	info, err := GetClient().Enqueue(task, asynq.Queue(QueueDefault))
-	if err != nil {
-		log.Fatalf("could not enqueue task: %v", err)
-	}
-	log.Printf("enqueued task: id=%s queue=%s", info.ID, info.Queue)
-
-	// ------------------------------------------------------------
-	// Schedule task to be processed in the future.
-	// Use ProcessIn or ProcessAt option.
-	// ------------------------------------------------------------
-	task, err = NewEmailWelcomeTask(2)
-	if err != nil {
-		log.Fatalf("could not create task: %v", err)
-	}
-	info, err = GetClient().Enqueue(task, asynq.ProcessIn(10*time.Second))
-	if err != nil {
-		log.Fatalf("could not enqueue task: %v", err)
-	}
-	log.Printf("enqueued task: id=%s queue=%s", info.ID, info.Queue)
-
-	// ----------------------------------------------------------------------------
-	// Set other options to tune task processing behavior.
-	// Options include MaxRetry, Queue, Timeout, Deadline, Unique etc.
-	// ----------------------------------------------------------------------------
-	task, err = NewEmailWelcomeTask(3)
-	if err != nil {
-		log.Fatalf("could not create task: %v", err)
-	}
-	info, err = GetClient().Enqueue(task, asynq.MaxRetry(10), asynq.Timeout(3*time.Minute))
-	if err != nil {
-		log.Fatalf("could not enqueue task: %v", err)
-	}
-	log.Printf("enqueued task: id=%s queue=%s", info.ID, info.Queue)
 }

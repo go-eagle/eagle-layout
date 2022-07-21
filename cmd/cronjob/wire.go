@@ -10,7 +10,7 @@ import (
 	"github.com/google/wire"
 )
 
-func InitApp(cfg *tasks.Config) (*eagle.App, error) {
+func InitApp(cfg *eagle.Config, config *eagle.ServerConfig, taskCfg *tasks.Config) (*eagle.App, error) {
 	wire.Build(server.ProviderSet, service.ProviderSet, newApp)
 	return &eagle.App{}, nil
 }

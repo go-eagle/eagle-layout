@@ -13,6 +13,7 @@ import (
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/redis"
+	"github.com/go-eagle/eagle/pkg/transport/cronjob"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 )
@@ -56,12 +57,12 @@ func main() {
 	// load config
 	c = config.New(*cfgDir, config.WithEnv(*env))
 	var taskCfg tasks.Config
-	if err := c.Load("cron", &cfg); err != nil {
+	if err := c.Load("cronjob", &taskCfg); err != nil {
 		panic(err)
 	}
 
 	// start app
-	app, err := InitApp(&taskCfg, &cfg.HTTP)
+	app, err := InitApp(&cfg, &cfg.GRPC, &taskCfg)
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +71,7 @@ func main() {
 	}
 }
 
-func newApp(cfg *eagle.Config, cs *server.Server) *eagle.App {
+func newApp(cfg *eagle.Config, cs *cronjob.Server) *eagle.App {
 	return eagle.New(
 		eagle.WithName(cfg.Name),
 		eagle.WithVersion(cfg.Version),

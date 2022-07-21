@@ -9,5 +9,5 @@ redis:
   PoolSize: 100
   PoolTimeout: 240s
 jobs:
-  - name: demo
-    schedule: '@every 1s'
+  - name: email:welcome
+    schedule: '@every 10s'

@@ -1,22 +1,22 @@
 // Code generated protoc-gen-go-gin. DO NOT EDIT.
-// protoc-gen-go-gin 0.0.2
+// protoc-gen-go-gin 0.0.6
 
 package v1
 
 import (
 	context "context"
-
-	"github.com/gin-gonic/gin"
-	"github.com/go-eagle/eagle/pkg/app"
-	"github.com/go-eagle/eagle/pkg/errcode"
+	gin "github.com/gin-gonic/gin"
+	app "github.com/go-eagle/eagle/pkg/app"
+	errcode "github.com/go-eagle/eagle/pkg/errcode"
 	metadata "google.golang.org/grpc/metadata"
 )
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the eagle package it is being compiled against.
-// context.metadata.
 
-var response = app.NewResponse()
+// context.
+// metadata.
+// gin.app.errcode.
 
 type GreeterHTTPServer interface {
 	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
@@ -39,7 +39,7 @@ func (s *Greeter) SayHello_0(ctx *gin.Context) {
 	var in HelloRequest
 
 	if err := ctx.ShouldBindQuery(&in); err != nil {
-		response.Error(ctx, errcode.ErrBind.WithDetails(err.Error()))
+		app.Error(ctx, errcode.ErrInvalidParam.WithDetails(err.Error()))
 		return
 	}
 
@@ -50,15 +50,13 @@ func (s *Greeter) SayHello_0(ctx *gin.Context) {
 	newCtx := metadata.NewIncomingContext(ctx, md)
 	out, err := s.server.(GreeterHTTPServer).SayHello(newCtx, &in)
 	if err != nil {
-		response.Error(ctx, err)
+		app.Error(ctx, err)
 		return
 	}
 
-	response.Success(ctx, out)
+	app.Success(ctx, out)
 }
 
 func (s *Greeter) RegisterService() {
-
 	s.router.Handle("GET", "/v1/helloworld", s.SayHello_0)
-
 }
