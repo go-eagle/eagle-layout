@@ -5,4 +5,4 @@ import (
 )
 
 // ProviderSet is service providers.
-var ProviderSet = wire.NewSet(NewGreeterService, NewCronJobService)
+var ProviderSet = wire.NewSet(NewGreeterService)

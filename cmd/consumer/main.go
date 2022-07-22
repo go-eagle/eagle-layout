@@ -3,19 +3,18 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/go-eagle/eagle-layout/internal/server"
+	"github.com/go-eagle/eagle/pkg/queue/rabbitmq"
+
 	"github.com/go-eagle/eagle-layout/internal/model"
-	"github.com/go-eagle/eagle-layout/internal/tasks"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/redis"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
-
-	"github.com/hibiken/asynq"
 )
 
 var (
@@ -24,7 +23,7 @@ var (
 	version = pflag.BoolP("version", "v", false, "show version info.")
 )
 
-func init() {
+func main() {
 	pflag.Parse()
 	if *version {
 		ver := v.Get()
@@ -53,38 +52,27 @@ func init() {
 	model.Init()
 	// init redis
 	redis.Init()
-}
 
-func main() {
-	// load config
-	c := config.New(*cfgDir, config.WithEnv(*env))
-	var cfg tasks.Config
-	if err := c.Load("cronjob", &cfg); err != nil {
+	// start app
+	app, err := InitApp(&cfg, &cfg.HTTP)
+	if err != nil {
 		panic(err)
 	}
-
-	// -------------- Run worker server ------------
-	srv := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: cfg.Addr},
-		asynq.Config{
-			// Specify how many concurrent workers to use
-			Concurrency: cfg.Concurrency,
-			// Optionally specify multiple queues with different priority.
-			Queues: map[string]int{
-				tasks.QueueCritical: 6,
-				tasks.QueueDefault:  3,
-				tasks.QueueLow:      1,
-			},
-			// See the godoc for other configuration options
-		},
-	)
-
-	// mux maps a type to a handler
-	mux := asynq.NewServeMux()
-	// register handlers...
-	mux.HandleFunc(tasks.TypeEmailWelcome, tasks.HandleEmailWelcomeTask)
-
-	if err := srv.Run(mux); err != nil {
-		log.Fatalf("could not run server: %v", err)
+	if err := app.Run(); err != nil {
+		panic(err)
 	}
+}
+
+func newApp(cfg *eagle.Config, cs *rabbitmq.Server) *eagle.App {
+	return eagle.New(
+		eagle.WithName(cfg.Name),
+		eagle.WithVersion(cfg.Version),
+		eagle.WithLogger(logger.GetLogger()),
+		eagle.WithServer(
+			// init HTTP server
+			server.NewHTTPServer(&cfg.HTTP),
+			// init consumer server
+			cs,
+		),
+	)
 }

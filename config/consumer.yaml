@@ -1,0 +1,3 @@
+rabbitmq:
+  addr: guest:guest@localhost:5672
+  exchangeName: test-exchange
