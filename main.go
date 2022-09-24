@@ -22,13 +22,11 @@ import (
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
-	"github.com/go-eagle/eagle/pkg/redis"
 	"github.com/go-eagle/eagle/pkg/transport/grpc"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 	_ "go.uber.org/automaxprocs"
 
-	"github.com/go-eagle/eagle-layout/internal/model"
 	"github.com/go-eagle/eagle-layout/internal/server"
 )
 
@@ -69,10 +67,6 @@ func main() {
 
 	// -------------- init resource -------------
 	logger.Init()
-	// init db
-	model.Init()
-	// init redis
-	redis.Init()
 
 	gin.SetMode(cfg.Mode)
 
@@ -85,7 +79,8 @@ func main() {
 	}()
 
 	// start app
-	app, err := InitApp(&cfg, &cfg.GRPC)
+	app, cleanup, err := InitApp(&cfg, &cfg.GRPC)
+	defer cleanup()
 	if err != nil {
 		panic(err)
 	}

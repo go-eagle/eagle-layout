@@ -1,36 +1,31 @@
 package model
 
 import (
-	"fmt"
-	"sync"
-
 	"github.com/go-eagle/eagle/pkg/config"
 	"github.com/go-eagle/eagle/pkg/storage/orm"
 	"gorm.io/gorm"
 )
 
 var (
-	DB   *gorm.DB
-	Once sync.Once
+	DB *gorm.DB
 )
 
 // Init init db
-func Init() *gorm.DB {
+func Init() (*gorm.DB, func(), error) {
 	cfg, err := loadConf()
 	if err != nil {
-		panic(fmt.Sprintf("load orm conf err: %v", err))
+		return nil, nil, err
 	}
 
 	DB = orm.NewMySQL(cfg)
-	return DB
-}
-
-// GetDB get a db instance
-func GetDB() *gorm.DB {
-	Once.Do(func() {
-		DB = Init()
-	})
-	return DB
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return nil, nil, err
+	}
+	cleanFunc := func() {
+		sqlDB.Close()
+	}
+	return DB, cleanFunc, nil
 }
 
 // loadConf load gorm config

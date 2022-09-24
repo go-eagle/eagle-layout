@@ -17,9 +17,10 @@ import (
 
 // Injectors from wire.go:
 
-func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, error) {
+func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, func(), error) {
 	greeterService := service.NewGreeterService()
 	grpcServer := server.NewGRPCServer(config, greeterService)
 	appApp := newApp(cfg, grpcServer)
-	return appApp, nil
+	return appApp, func() {
+	}, nil
 }
