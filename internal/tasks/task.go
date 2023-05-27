@@ -20,20 +20,23 @@ var (
 )
 
 type Config struct {
-	Addr         string
-	Password     string
-	DB           int
-	MinIdleConn  int
-	DialTimeout  time.Duration
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	PoolSize     int
-	PoolTimeout  time.Duration
-	Concurrency  int //并发数
-	Jobs         []Job
+	Redis struct {
+		Addr         string
+		Password     string
+		DB           int
+		MinIdleConn  int
+		DialTimeout  time.Duration
+		ReadTimeout  time.Duration
+		WriteTimeout time.Duration
+		PoolSize     int
+		PoolTimeout  time.Duration
+		Concurrency  int //并发数
+
+	}
+	Tasks []Task
 }
 
-type Job struct {
+type Task struct {
 	Name     string
 	Schedule string
 }
@@ -41,16 +44,16 @@ type Job struct {
 func NewClient(cfg *Config) *asynq.Client {
 	once.Do(func() {
 		if cfg == nil {
-			panic("tasks client is nil")
+			panic("tasks config is nil")
 		}
 		client = asynq.NewClient(asynq.RedisClientOpt{
-			Addr:         cfg.Addr,
-			Password:     cfg.Password,
-			DB:           cfg.DB,
-			DialTimeout:  cfg.DialTimeout,
-			ReadTimeout:  cfg.ReadTimeout,
-			WriteTimeout: cfg.WriteTimeout,
-			PoolSize:     cfg.PoolSize,
+			Addr:         cfg.Redis.Addr,
+			Password:     cfg.Redis.Password,
+			DB:           cfg.Redis.DB,
+			DialTimeout:  cfg.Redis.DialTimeout,
+			ReadTimeout:  cfg.Redis.ReadTimeout,
+			WriteTimeout: cfg.Redis.WriteTimeout,
+			PoolSize:     cfg.Redis.PoolSize,
 		})
 	})
 	return client

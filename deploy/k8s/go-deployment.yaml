@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: # Deployment的元数据
+  name: go-deployment
+  labels:
+    app: go-app
+spec:
+  replicas: 3 # ReplicaSet部分的定义
+  selector:
+    matchLabels:
+      app: go-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template: # Pod 模板的定义
+    metadata:
+      labels:
+        app: go-app
+    spec: # Pod里容器相关的定义
+      containers:
+        - name: go-app-container
+          image: go-eagle/go-app:v1.0.0
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m" # 0.1核，1000m = 1核心
+          ports:
+            - containerPort: 80
+            - containerPort: 9090
+          readinessProbe: # 就绪探针
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=:9090" ]
+            initialDelaySeconds: 5
+          livenessProbe: # 存活探针
+            exec:
+              command: [ "/bin/grpc_health_probe", "-addr=:9090" ]
+            initialDelaySeconds: 10

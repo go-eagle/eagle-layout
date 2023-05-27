@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/go-eagle/eagle-layout/internal/server"
-	"github.com/go-eagle/eagle/pkg/queue/rabbitmq"
-
-	"github.com/go-eagle/eagle-layout/internal/model"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/redis"
+	"github.com/go-eagle/eagle/pkg/transport/consumer"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
+
+	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/server"
+	"github.com/go-eagle/eagle-layout/internal/tasks"
 )
 
 var (
@@ -53,8 +54,15 @@ func main() {
 	// init redis
 	redis.Init()
 
+	// load config
+	c = config.New(*cfgDir, config.WithEnv(*env))
+	var taskCfg tasks.Config
+	if err := c.Load("consumer", &taskCfg); err != nil {
+		panic(err)
+	}
+
 	// start app
-	app, err := InitApp(&cfg, &cfg.HTTP)
+	app, err := InitApp(&cfg, &cfg.GRPC, &taskCfg)
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +71,7 @@ func main() {
 	}
 }
 
-func newApp(cfg *eagle.Config, cs *rabbitmq.Server) *eagle.App {
+func newApp(cfg *eagle.Config, cs *consumer.Server) *eagle.App {
 	return eagle.New(
 		eagle.WithName(cfg.Name),
 		eagle.WithVersion(cfg.Version),
@@ -71,7 +79,7 @@ func newApp(cfg *eagle.Config, cs *rabbitmq.Server) *eagle.App {
 		eagle.WithServer(
 			// init HTTP server
 			server.NewHTTPServer(&cfg.HTTP),
-			// init consumer server
+			// init cron job server
 			cs,
 		),
 	)

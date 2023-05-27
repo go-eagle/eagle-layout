@@ -7,13 +7,16 @@ package main
 
 import (
 	"github.com/go-eagle/eagle-layout/internal/server"
+	"github.com/go-eagle/eagle-layout/internal/service"
+	"github.com/go-eagle/eagle-layout/internal/tasks"
 	"github.com/go-eagle/eagle/pkg/app"
 )
 
 // Injectors from wire.go:
 
-func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, error) {
-	rabbitmqServer := server.NewRabbitMQServer()
-	appApp := newApp(cfg, rabbitmqServer)
+func InitApp(cfg *app.Config, config *app.ServerConfig, taskCfg *tasks.Config) (*app.App, error) {
+	consumerService := service.NewConsumerService()
+	consumerServer := server.NewConsumerServer(taskCfg, consumerService)
+	appApp := newApp(cfg, consumerServer)
 	return appApp, nil
 }

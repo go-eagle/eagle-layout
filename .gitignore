@@ -17,3 +17,4 @@
 vendor/
 log
 eagle-layout
+cmd/consumer/consumer
