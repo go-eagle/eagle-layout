@@ -8,9 +8,6 @@ redis:
   WriteTimeout: 500ms
   PoolSize: 100
   PoolTimeout: 240s
-tasks:
-  - Name: email:welcome
-    Schedule: '@every 10s'
 
 rabbitmq:
   addr: guest:guest@localhost:5672

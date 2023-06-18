@@ -4,6 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-eagle/eagle/pkg/config"
+
 	"github.com/hibiken/asynq"
 )
 
@@ -31,9 +33,7 @@ type Config struct {
 		PoolSize     int
 		PoolTimeout  time.Duration
 		Concurrency  int //并发数
-
 	}
-	Tasks []Task
 }
 
 type Task struct {
@@ -41,10 +41,12 @@ type Task struct {
 	Schedule string
 }
 
-func NewClient(cfg *Config) *asynq.Client {
+func GetClient() *asynq.Client {
 	once.Do(func() {
-		if cfg == nil {
-			panic("tasks config is nil")
+		c := config.New("config")
+		var cfg Config
+		if err := c.Load("consumer", &cfg); err != nil {
+			panic(err)
 		}
 		client = asynq.NewClient(asynq.RedisClientOpt{
 			Addr:         cfg.Redis.Addr,

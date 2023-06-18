@@ -79,7 +79,7 @@ func newApp(cfg *eagle.Config, cs *consumer.Server) *eagle.App {
 		eagle.WithServer(
 			// init HTTP server
 			server.NewHTTPServer(&cfg.HTTP),
-			// init cron job server
+			// init consumer server
 			cs,
 		),
 	)

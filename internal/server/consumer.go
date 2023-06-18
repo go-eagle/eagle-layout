@@ -8,10 +8,7 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-func NewConsumerServer(c *tasks.Config, jobSvc *service.ConsumerService) *consumer.Server {
-	// register task and handle
-	jobSvc.Register()
-
+func NewConsumerServer(c *tasks.Config, svc *service.ConsumerService) *consumer.Server {
 	cfg := asynq.RedisClientOpt{
 		Network: "tcp",
 		Addr:    c.Redis.Addr,
@@ -28,46 +25,15 @@ func NewConsumerServer(c *tasks.Config, jobSvc *service.ConsumerService) *consum
 		},
 		// See the godoc for other configuration options
 	})
-	for _, t := range c.Tasks {
-		task, ok := service.Tasks[t.Name]
-		if !ok {
-			log.Warnf("can not find task: %s", t.Name)
-			continue
-		}
-		// register task
-		_, err := srv.RegisterTask(t.Schedule, task)
-		if err != nil {
-			panic(err)
-		}
 
-		// register handle
-		handle, ok := service.HandleFunc[t.Name]
-		if !ok {
-			log.Warnf("can not find handle: %s", t.Name)
-			continue
-		}
-		log.Info("====register handle===", t.Name)
-		srv.RegisterHandle(t.Name, handle)
+	// register handle
+	handles := svc.RegisterHandle()
+
+	for name, handle := range handles {
+		log.Info("[server] consumer register handle: ", name)
+		srv.RegisterHandle(name, handle)
 	}
-	log.Info("load tasks count:", len(c.Tasks))
-
-	//go func() {
-	//	s := asynq.NewServer(
-	//		cfg,
-	//		asynq.Config{
-	//
-	//		},
-	//	)
-	//
-	//	// mux maps a type to a handler
-	//	mux := asynq.NewServeMux()
-	//	// register handlers...
-	//	mux.HandleFunc(tasks.TypeEmailWelcome, tasks.HandleEmailWelcomeTask)
-	//
-	//	if err := s.Run(mux); err != nil {
-	//		log.Errorf("failed to run async server: %v", err)
-	//	}
-	//}()
+	log.Info("[server] consumer load tasks count:", len(handles))
 
 	return srv
 }

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/go-eagle/eagle/pkg/log"
 	"github.com/hibiken/asynq"
 )
@@ -22,9 +24,16 @@ type EmailWelcomePayload struct {
 // A task consists of a type and a payload.
 //----------------------------------------------
 
-func NewEmailWelcomeTask(userID int) *asynq.Task {
-	payload, _ := json.Marshal(EmailWelcomePayload{UserID: userID})
-	return asynq.NewTask(TypeEmailWelcome, payload)
+func NewEmailWelcomeTask(data EmailWelcomePayload) error {
+	payload, _ := json.Marshal(data)
+
+	task := asynq.NewTask(TypeEmailWelcome, payload)
+	_, err := GetClient().Enqueue(task)
+	if err != nil {
+		return errors.Wrapf(err, "[tasks] Enqueue task error, name: %s", TypeEmailWelcome)
+	}
+
+	return err
 }
 
 //---------------------------------------------------------------
