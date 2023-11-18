@@ -32,7 +32,7 @@ all: lint test build
 .PHONY: build
 # make build, Build the binary file
 build: dep
-	@go build -v -ldflags ${ldflags} -o /go/bin/eagle-layout
+	@cd cmd/server && go build -v -ldflags ${ldflags} .
 
 .PHONY: dep
 # make dep Get the dependencies
