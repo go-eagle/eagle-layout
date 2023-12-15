@@ -9,7 +9,7 @@ import (
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/redis"
-	"github.com/go-eagle/eagle/pkg/transport/consumer"
+	redisMQ "github.com/go-eagle/eagle/pkg/transport/consumer/redis"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 
@@ -62,7 +62,8 @@ func main() {
 	}
 
 	// start app
-	app, err := InitApp(&cfg, &cfg.GRPC, &taskCfg)
+	app, cleanup, err := InitApp(&cfg, &cfg.HTTP, &taskCfg)
+	defer cleanup()
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +72,7 @@ func main() {
 	}
 }
 
-func newApp(cfg *eagle.Config, cs *consumer.Server) *eagle.App {
+func newApp(cfg *eagle.Config, cs *redisMQ.Server) *eagle.App {
 	return eagle.New(
 		eagle.WithName(cfg.Name),
 		eagle.WithVersion(cfg.Version),
