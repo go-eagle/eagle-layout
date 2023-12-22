@@ -146,13 +146,15 @@ init:
 	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 	go install github.com/golang/mock/mockgen@latest
 	go install github.com/favadi/protoc-go-inject-tag@latest
+	go install github.com/envoyproxy/protoc-gen-validate@latest
 
 .PHONY: proto
-# generate proto struct only
+# generate proto struct with validate
 proto:
 	protoc --proto_path=. \
            --proto_path=./third_party \
            --go_out=. --go_opt=paths=source_relative \
+           --validate_out=lang=go,paths=source_relative:. \
            $(API_PROTO_FILES)
 
 .PHONY: grpc

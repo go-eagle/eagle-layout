@@ -3,6 +3,7 @@ syntax = "proto3";
 package helloworld.greeter.v1;
 
 import "google/api/annotations.proto";
+import "validate/validate.proto";
 
 option go_package="github.com/go-eagle/eagle-layout/api/helloworld/greeter/v1;v1";
 
@@ -19,7 +20,7 @@ service Greeter {
 
 // The request message containing the user's name.
 message HelloRequest {
-  string name = 1;
+  string name = 1 [(validate.rules).string.min_len = 3];
 }
 
 // The response message containing the greetings
