@@ -44,33 +44,28 @@ dep:
 fmt:
 	@gofmt -s -w .
 
+.PHONY: golint
+# make golint
+golint:
+	@if ! which golint &>/dev/null; then \
+  		echo "Installing golint"; \
+  		go get -u golang.org/x/lint/golint; \
+  	fi
+	@golint -set_exit_status ${PKG_LIST}
+
 .PHONY: lint
 # make lint
 lint:
-	@golint -set_exit_status ${PKG_LIST}
-
-.PHONY: ci-lint
-# make ci-lint
-ci-lint: prepare-lint
-	${GOPATH}/bin/golangci-lint run ./...
-
-.PHONY: prepare-lint
-# make prepare-lint
-prepare-lint:
 	@if ! which golangci-lint &>/dev/null; then \
   		echo "Installing golangci-lint"; \
-  		curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s latest; \
+  		go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0; \
   	fi
+	${GOPATH}/bin/golangci-lint run ./...
 
 .PHONY: test
 # make test
-test: test-case vet
+test: vet
 	@go test -short ${PKG_LIST}
-
-.PHONY: test-case
-# make test-case
-test-case:
-	@go test -cover ./... | grep -v vendor;true
 
 .PHONY: vet
 # make vet
@@ -79,13 +74,13 @@ vet:
 
 .PHONY: cover
 # make cover
-cover: gen-coverage
-	@go tool cover -html=coverage.txt
+cover:
+	@go test -short -coverprofile=coverage.txt -covermode=atomic ${PKG_LIST}
 
-.PHONY: gen-coverage
-# make gen-coverage
-gen-coverage:
-	@go test -short -coverprofile coverage.txt -covermode=atomic ${PKG_LIST}
+.PHONY: view-cover
+# make view-cover  preview coverage
+view-cover:
+	go tool cover -html=coverage.txt
 
 .PHONY: docker
 # make docker  生成docker镜像
