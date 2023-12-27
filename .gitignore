@@ -19,3 +19,4 @@ log
 eagle-layout
 cmd/consumer/consumer
 cmd/server/server
+coverage.txt
