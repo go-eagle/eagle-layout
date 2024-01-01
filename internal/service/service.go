@@ -5,4 +5,10 @@ import (
 )
 
 // ProviderSet is service providers.
-var ProviderSet = wire.NewSet(newGreeterService)
+var ProviderSet = wire.NewSet(NewGreeterService)
+
+// global svc var
+var (
+	// UserSvc user service
+	UserSvc GreeterService
+)

@@ -17,7 +17,7 @@ type greeterService struct {
 
 var _ GreeterService = (*greeterService)(nil)
 
-func newGreeterService(repo repository.UserRepo) *greeterService {
+func NewGreeterService(repo repository.UserRepo) GreeterService {
 	return &greeterService{
 		repo: repo,
 	}

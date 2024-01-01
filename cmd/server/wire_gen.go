@@ -6,8 +6,13 @@
 package main
 
 import (
+	"github.com/go-eagle/eagle-layout/internal/cache"
+	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
+	"github.com/go-eagle/eagle-layout/internal/service"
 	"github.com/go-eagle/eagle/pkg/app"
+	"github.com/go-eagle/eagle/pkg/redis"
 )
 
 import (
@@ -17,8 +22,22 @@ import (
 // Injectors from wire.go:
 
 func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, func(), error) {
-	httpServer := server.NewHTTPServer(config)
+	db, cleanup, err := model.Init()
+	if err != nil {
+		return nil, nil, err
+	}
+	client, cleanup2, err := redis.Init()
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	userCache := cache.NewUserCache(client)
+	userRepo := repository.NewUser(db, userCache)
+	greeterService := service.NewGreeterService(userRepo)
+	httpServer := server.NewHTTPServer(config, greeterService)
 	appApp := newApp(cfg, httpServer)
 	return appApp, func() {
+		cleanup2()
+		cleanup()
 	}, nil
 }
