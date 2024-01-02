@@ -17,8 +17,8 @@ func TestHello(t *testing.T) {
 		expectedCode int
 		expectedBody string
 	}{
-		{"ValidParam", "name=eagle", http.StatusOK, `{"code":0,"message":"Ok","data":{"msg":"hello eagle"}}`},
-		{"InvalidParam", "email=abc", http.StatusOK, `{"code":0,"message":"Ok","data":{"msg":"hello "}}`},
+		{"ValidParam", "name=eagle", http.StatusOK, `{"code":0,"message":"Ok","data":{"result":"hello eagle"}}`},
+		{"InvalidParam", "email=abc", http.StatusOK, `{"code":0,"message":"Ok","data":{"result":"hello "}}`},
 	}
 
 	for _, tt := range tests {

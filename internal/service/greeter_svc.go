@@ -8,7 +8,7 @@ import (
 
 // GreeterService define a interface
 type GreeterService interface {
-	Hello(ctx context.Context) error
+	Hello(ctx context.Context, name string) (string, error)
 }
 
 type greeterService struct {
@@ -24,6 +24,6 @@ func NewGreeterService(repo repository.UserRepo) GreeterService {
 }
 
 // Hello .
-func (s *greeterService) Hello(ctx context.Context) error {
-	return nil
+func (s *greeterService) Hello(ctx context.Context, name string) (string, error) {
+	return "hello " + name, nil
 }
