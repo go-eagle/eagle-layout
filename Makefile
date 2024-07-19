@@ -1,6 +1,10 @@
 SHELL := /bin/bash
 BASEDIR = $(shell pwd)
 
+# 可在make是带入参数进行替换
+# eg: make SERVICE_NAME=user-service build
+SERVICE_NAME?=user-service
+
 # build with version infos
 versionDir = "github.com/go-eagle/eagle/pkg/version"
 gitTag = $(shell if [ "`git describe --tags --abbrev=0 2>/dev/null`" != "" ];then git describe --tags --abbrev=0; else git log --pretty=format:'%h' -n 1; fi)
@@ -32,7 +36,7 @@ all: lint test build
 .PHONY: build
 # make build, Build the binary file
 build: dep
-	@cd cmd/server && go build -v -ldflags ${ldflags} .
+	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o build/$(SERVICE_NAME) cmd/server/*
 
 .PHONY: dep
 # make dep Get the dependencies
