@@ -84,12 +84,12 @@ cover:
 .PHONY: view-cover
 # make view-cover  preview coverage
 view-cover:
-	go tool cover -html=coverage.txt
+	go tool cover -html=coverage.txt -o coverage.html
 
 .PHONY: docker
 # make docker  生成docker镜像
 docker:
-	docker build -t eagle:$(versionDir) -f Dockeffile .
+	docker build -t eagle:$(versionDir) -f deploy/docker/Dockeffile .
 
 .PHONY: clean
 # make clean
