@@ -35,13 +35,13 @@ all: lint test build
 
 .PHONY: build
 # make build, Build the binary file
-build: dep
-	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o build/$(SERVICE_NAME) cmd/server/*
+build: 
+	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o build/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
 
-.PHONY: dep
-# make dep Get the dependencies
-dep:
-	@go mod download
+.PHONY: run
+# make run, run current project
+run:
+	go run cmd/server/main.go cmd/server/wire_gen.go
 
 .PHONY: fmt
 # make fmt

@@ -15,8 +15,9 @@
 
 # Dependency directories (remove the comment below to include it)
 vendor/
-log
+logs
 eagle-layout
 cmd/consumer/consumer
 cmd/server/server
 coverage.txt
+build
