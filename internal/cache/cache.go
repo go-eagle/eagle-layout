@@ -6,4 +6,4 @@ import (
 )
 
 // ProviderSet is cache providers.
-var ProviderSet = wire.NewSet(redis.Init)
+var ProviderSet = wire.NewSet(redis.Init, NewUserCache)
