@@ -1,6 +1,10 @@
 SHELL := /bin/bash
 BASEDIR = $(shell pwd)
 
+# 可在make是带入参数进行替换
+# eg: make SERVICE_NAME=user-service build
+SERVICE_NAME?=user-service
+
 # build with version infos
 versionDir = "github.com/go-eagle/eagle/pkg/version"
 gitTag = $(shell if [ "`git describe --tags --abbrev=0 2>/dev/null`" != "" ];then git describe --tags --abbrev=0; else git log --pretty=format:'%h' -n 1; fi)
@@ -31,13 +35,13 @@ all: lint test build
 
 .PHONY: build
 # make build, Build the binary file
-build: dep
-	@cd cmd/server && go build -v -ldflags ${ldflags} .
+build: 
+	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o build/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
 
-.PHONY: dep
-# make dep Get the dependencies
-dep:
-	@go mod download
+.PHONY: run
+# make run, run current project
+run:
+	go run cmd/server/main.go cmd/server/wire_gen.go
 
 .PHONY: fmt
 # make fmt
@@ -80,12 +84,12 @@ cover:
 .PHONY: view-cover
 # make view-cover  preview coverage
 view-cover:
-	go tool cover -html=coverage.txt
+	go tool cover -html=coverage.txt -o coverage.html
 
 .PHONY: docker
 # make docker  生成docker镜像
 docker:
-	docker build -t eagle:$(versionDir) -f Dockeffile .
+	docker build -t eagle:$(versionDir) -f deploy/docker/Dockeffile .
 
 .PHONY: clean
 # make clean
