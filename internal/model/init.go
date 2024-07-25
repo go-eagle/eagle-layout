@@ -6,6 +6,7 @@ import (
 )
 
 var (
+    // DB define a gloabl db
 	DB *gorm.DB
 )
 

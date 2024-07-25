@@ -12,9 +12,11 @@ import (
 )
 
 const (
+    // TypeEmailWelcome define a task name
 	TypeEmailWelcome = "email:welcome"
 )
 
+// EmailWelcomePayload payload data for task
 type EmailWelcomePayload struct {
 	UserID int
 }
@@ -24,6 +26,7 @@ type EmailWelcomePayload struct {
 // A task consists of a type and a payload.
 //----------------------------------------------
 
+// NewEmailWelcomeTask create a task
 func NewEmailWelcomeTask(data EmailWelcomePayload) error {
 	payload, _ := json.Marshal(data)
 
@@ -44,6 +47,7 @@ func NewEmailWelcomeTask(data EmailWelcomePayload) error {
 // that satisfies asynq.Handler interface. See examples below.
 //---------------------------------------------------------------
 
+// HandleEmailWelcomeTask handle task
 func HandleEmailWelcomeTask(ctx context.Context, t *asynq.Task) error {
 	var p EmailWelcomePayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {

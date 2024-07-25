@@ -6,6 +6,7 @@ import (
 	"github.com/hibiken/asynq"
 )
 
+// NewConsumerServer create a redis server
 func NewConsumerServer(c *tasks.Config) *redisMQ.Server {
 	cfg := asynq.RedisClientOpt{
 		Network: "tcp",

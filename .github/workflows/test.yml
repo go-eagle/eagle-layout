@@ -28,6 +28,7 @@ jobs:
       - name: Setup golangci-lint
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
+          make golint
 
   test:
     needs: lint
