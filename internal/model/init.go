@@ -6,18 +6,19 @@ import (
 )
 
 var (
+	// DB define a gloabl db
 	DB *gorm.DB
 )
 
 // Init init db
 func Init() (*gorm.DB, func(), error) {
-    err := orm.New([]string{"default"}...)
-    if err != nil {
-        return nil, nil, err
-    }
+	err := orm.New([]string{"default"}...)
+	if err != nil {
+		return nil, nil, err
+	}
 
-    // get first db
-    DB, err := orm.GetDB("default")
+	// get first db
+	DB, err := orm.GetDB("default")
 	if err != nil {
 		return nil, nil, err
 	}

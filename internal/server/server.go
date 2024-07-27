@@ -5,4 +5,5 @@ import (
 )
 
 // ProviderSet is server providers.
-var ProviderSet = wire.NewSet(NewHTTPServer)
+// if you want to add rabbitmq, you can append NewRabbitmqConsumerServer in NewSet
+var ProviderSet = wire.NewSet(NewHTTPServer, NewRedisConsumerServer)

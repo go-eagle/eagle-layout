@@ -10,17 +10,22 @@ import (
 )
 
 const (
-	// queue name
+	// QueueCritical queue priority high
 	QueueCritical = "critical"
+	// QueueDefault queue priority middle
 	QueueDefault  = "default"
+	// QueueLow queue priority low
 	QueueLow      = "low"
 )
 
 var (
+    // client define a async client
 	client *asynq.Client
+	// once define a lock for get async client
 	once   sync.Once
 )
 
+// Config define a struct
 type Config struct {
 	Redis struct {
 		Addr         string
@@ -36,11 +41,13 @@ type Config struct {
 	}
 }
 
+// Task define a task struct
 type Task struct {
 	Name     string
 	Schedule string
 }
 
+// GetClient get a async client
 func GetClient() *asynq.Client {
 	once.Do(func() {
 		c := config.New("config")

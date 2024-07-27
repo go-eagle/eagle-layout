@@ -8,6 +8,7 @@ redis:
   WriteTimeout: 500ms
   PoolSize: 100
   PoolTimeout: 240s
+  Concurrency: 10
 
 rabbitmq:
   addr: guest:guest@localhost:5672
