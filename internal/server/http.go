@@ -2,16 +2,12 @@ package server
 
 import (
 	"github.com/go-eagle/eagle-layout/internal/routers"
-	"github.com/go-eagle/eagle-layout/internal/service"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/transport/http"
 )
 
 // NewHTTPServer creates a HTTP server
-func NewHTTPServer(c *app.ServerConfig,
-	userSvc service.GreeterService,
-	// here you can pass more service
-) *http.Server {
+func NewHTTPServer(c *app.ServerConfig) *http.Server {
 	router := routers.NewRouter()
 
 	srv := http.NewServer(
@@ -21,10 +17,6 @@ func NewHTTPServer(c *app.ServerConfig,
 	)
 
 	srv.Handler = router
-
-	// register biz svc if you need.
-	// you can use it in handler.
-	service.UserSvc = userSvc
 
 	return srv
 }

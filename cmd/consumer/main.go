@@ -7,14 +7,9 @@ import (
 
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
-	logger "github.com/go-eagle/eagle/pkg/log"
-	"github.com/go-eagle/eagle/pkg/redis"
-	redisMQ "github.com/go-eagle/eagle/pkg/transport/consumer/redis"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 
-	"github.com/go-eagle/eagle-layout/internal/model"
-	"github.com/go-eagle/eagle-layout/internal/server"
 	"github.com/go-eagle/eagle-layout/internal/tasks"
 )
 
@@ -47,13 +42,6 @@ func main() {
 	// set global
 	eagle.Conf = &cfg
 
-	// -------------- init resource -------------
-	logger.Init()
-	// init db
-	model.Init()
-	// init redis
-	redis.Init()
-
 	// load config
 	c = config.New(*cfgDir, config.WithEnv(*env))
 	var taskCfg tasks.Config
@@ -70,18 +58,4 @@ func main() {
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
-}
-
-func newApp(cfg *eagle.Config, cs *redisMQ.Server) *eagle.App {
-	return eagle.New(
-		eagle.WithName(cfg.Name),
-		eagle.WithVersion(cfg.Version),
-		eagle.WithLogger(logger.GetLogger()),
-		eagle.WithServer(
-			// init HTTP server
-			server.NewHTTPServer(&cfg.HTTP),
-			// init consumer server
-			cs,
-		),
-	)
 }
