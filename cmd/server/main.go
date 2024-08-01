@@ -72,7 +72,7 @@ func main() {
 	}()
 
 	// start app
-	app, cleanup, err := InitApp(&cfg, &cfg.HTTP)
+	app, cleanup, err := InitApp(&cfg)
 	defer cleanup()
 	if err != nil {
 		panic(err)
