@@ -7,6 +7,7 @@ import (
 	"github.com/go-eagle/eagle-layout/internal/server"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	logger "github.com/go-eagle/eagle/pkg/log"
+	"github.com/go-eagle/eagle/pkg/transport/grpc"
 	httpSrv "github.com/go-eagle/eagle/pkg/transport/http"
 	"github.com/google/wire"
 )
