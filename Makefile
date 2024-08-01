@@ -43,6 +43,11 @@ build:
 run:
 	go run cmd/server/main.go cmd/server/wire_gen.go
 
+.PHONY: wire
+# make wire, generate wire_gen.go
+wire:
+	cd cmd/server && wire
+
 .PHONY: fmt
 # make fmt
 fmt:
