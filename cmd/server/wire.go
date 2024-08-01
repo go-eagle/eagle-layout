@@ -11,13 +11,13 @@ import (
 	"github.com/google/wire"
 )
 
-func InitApp(cfg *eagle.Config, config *eagle.ServerConfig) (*eagle.App, func(), error) {
+func InitApp(cfg *eagle.Config) (*eagle.App, func(), error) {
 	// wire.Build(server.ProviderSet, service.ProviderSet, repository.ProviderSet, cache.ProviderSet, newApp)
 	wire.Build(server.ProviderSet, newApp)
 	return &eagle.App{}, nil, nil
 }
 
-func newApp(cfg *eagle.Config, hs *httpSrv.Server) *eagle.App {
+func newApp(cfg *eagle.Config, hs *httpSrv.Server, gs *grpc.Server) *eagle.App {
 	logger.Init(logger.WithFilename("app"))
 
 	return eagle.New(
@@ -27,6 +27,8 @@ func newApp(cfg *eagle.Config, hs *httpSrv.Server) *eagle.App {
 		eagle.WithServer(
 			// init HTTP server
 			hs,
+			// init GRPC server
+			gs,
 		),
 	)
 }
