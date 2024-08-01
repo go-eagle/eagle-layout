@@ -7,13 +7,13 @@ import (
 )
 
 // NewHTTPServer creates a HTTP server
-func NewHTTPServer(c *app.ServerConfig) *http.Server {
+func NewHTTPServer(c *app.Config) *http.Server {
 	router := routers.NewRouter()
 
 	srv := http.NewServer(
-		http.WithAddress(c.Addr),
-		http.WithReadTimeout(c.ReadTimeout),
-		http.WithWriteTimeout(c.WriteTimeout),
+		http.WithAddress(c.HTTP.Addr),
+		http.WithReadTimeout(c.HTTP.ReadTimeout),
+		http.WithWriteTimeout(c.HTTP.WriteTimeout),
 	)
 
 	srv.Handler = router
