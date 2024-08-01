@@ -7,9 +7,10 @@
 package main
 
 import (
-	"github.com/go-eagle/eagle-layout/internal/server"
+	"eagle-test6/internal/server"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/log"
+	"github.com/go-eagle/eagle/pkg/transport/grpc"
 	"github.com/go-eagle/eagle/pkg/transport/http"
 )
 
@@ -19,21 +20,24 @@ import (
 
 // Injectors from wire.go:
 
-func InitApp(cfg *app.Config, config *app.ServerConfig) (*app.App, func(), error) {
-	httpServer := server.NewHTTPServer(config)
-	appApp := newApp(cfg, httpServer)
+func InitApp(cfg *app.Config) (*app.App, func(), error) {
+	httpServer := server.NewHTTPServer(cfg)
+	grpcServer := server.NewGRPCServer(cfg)
+	appApp := newApp(cfg, httpServer, grpcServer)
 	return appApp, func() {
 	}, nil
 }
 
 // wire.go:
 
-func newApp(cfg *app.Config, hs *http.Server) *app.App {
+func newApp(cfg *app.Config, hs *http.Server, gs *grpc.Server) *app.App {
 	log.Init(log.WithFilename("app"))
 
 	return app.New(app.WithName(cfg.Name), app.WithVersion(cfg.Version), app.WithLogger(log.GetLogger()), app.WithServer(
 
 		hs,
+
+		gs,
 	),
 	)
 }
