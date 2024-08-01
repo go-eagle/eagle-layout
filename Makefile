@@ -40,7 +40,7 @@ build:
 
 .PHONY: run
 # make run, run current project
-run:
+run: wire
 	go run cmd/server/main.go cmd/server/wire_gen.go
 
 .PHONY: wire
