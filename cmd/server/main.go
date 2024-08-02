@@ -21,12 +21,9 @@ import (
 	"github.com/gin-gonic/gin"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
-	logger "github.com/go-eagle/eagle/pkg/log"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 	_ "go.uber.org/automaxprocs"
-
-	httpSrv "github.com/go-eagle/eagle/pkg/transport/http"
 )
 
 var (
@@ -64,9 +61,6 @@ func main() {
 	// set global
 	eagle.Conf = &cfg
 
-	// -------------- init resource -------------
-	logger.Init()
-
 	gin.SetMode(cfg.Mode)
 
 	// init pprof server
@@ -78,7 +72,7 @@ func main() {
 	}()
 
 	// start app
-	app, cleanup, err := InitApp(&cfg, &cfg.HTTP)
+	app, cleanup, err := InitApp(&cfg)
 	defer cleanup()
 	if err != nil {
 		panic(err)
@@ -86,16 +80,4 @@ func main() {
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
-}
-
-func newApp(cfg *eagle.Config, hs *httpSrv.Server) *eagle.App {
-	return eagle.New(
-		eagle.WithName(cfg.Name),
-		eagle.WithVersion(cfg.Version),
-		eagle.WithLogger(logger.GetLogger()),
-		eagle.WithServer(
-			// init HTTP server
-			hs,
-		),
-	)
 }

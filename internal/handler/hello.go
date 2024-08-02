@@ -15,6 +15,7 @@ type Param struct {
 	Name string `form:"name"`
 }
 
+// Hello a demo handler
 func Hello(c *gin.Context) {
 	var p Param
 	if err := c.ShouldBindQuery(&p); err != nil {

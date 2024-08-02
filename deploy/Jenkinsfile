@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY = 'your-docker-registry'
+        IMAGE_NAME = 'your-image-name'
+        KUBECONFIG_CREDENTIALS_ID = 'your-kubeconfig-credentials-id'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    // Use Go to build the application
+                    sh 'go mod tidy'
+                    sh 'make build'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    // Run tests
+                    sh 'make test'
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                script {
+                    // Build Docker image
+                    sh "docker build -t ${REGISTRY}/${IMAGE_NAME}:${env.BUILD_NUMBER} ."
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    // Push Docker image to registry
+                    sh "docker push ${REGISTRY}/${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Ensure kubectl is configured with the proper KUBECONFIG
+                    withCredentials([file(credentialsId: KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                        sh 'kubectl apply -f k8s/go-deployment.yaml'
+                        sh "kubectl set image deployment/myapp myapp=${REGISTRY}/${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                // Clean up workspace
+                cleanWs()
+            }
+        }
+    }
+}

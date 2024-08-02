@@ -1,0 +1,74 @@
+# rabbitmq.yaml, 支持配置多个队列
+test-demo:
+  uri: "amqp://guest:guest@localhost:5672/moments-test"
+  auto-declare: true
+  timeout: 5s
+  exchange:
+    name: local-test-exchange
+    kind: direct
+    durable: true
+    auto-delete: false
+    internal: false
+    no-wait: false
+    args: {}
+  queue:
+    name: local-test-queue
+    durable: true
+    auto-delete: false
+    exclusive: false
+    no-wait: false
+    args: {}
+  bind:
+    routing-key: local-test-routing-key
+    no-wait: false
+    args: {}
+
+test-demo2:
+  uri: "amqp://guest:guest@localhost:5672/moments-test"
+  auto-declare: true
+  timeout: 5s
+  exchange:
+    name: local-test2-exchange
+    kind: direct
+    durable: true
+    auto-delete: false
+    internal: false
+    no-wait: false
+    args: {}
+  queue:
+    name: local-test2-queue
+    durable: true
+    auto-delete: false
+    exclusive: false
+    no-wait: false
+    args: {}
+  bind:
+    routing-key: local-test2-routing-key
+    no-wait: false
+    args: {}
+
+# 延迟队列, 需要安装延迟队列插件
+delay-queue1:
+  uri: amqp://guest:guest@localhost:5672/moments-test
+  auto-declare: true
+  timeout: 5s
+  exchange:
+    name: delayed-exchange
+    kind: x-delayed-message
+    durable: true
+    auto-delete: false
+    internal: false
+    no-wait: false
+    args:
+      x-delayed-type: direct
+  queue:
+    name: delayed-queue
+    durable: true
+    auto-delete: false
+    exclusive: false
+    no-wait: false
+    args: {}
+  bind:
+    routing-key: delayed-routing-key
+    no-wait: false
+    args: {}

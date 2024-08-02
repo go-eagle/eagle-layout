@@ -29,6 +29,7 @@ func (u *UserModel) TableName() string {
 	return "user_info"
 }
 
+// BeforeCreate a prefix func for create
 func (u *UserModel) BeforeCreate(tx *gorm.DB) (err error) {
 	if u.Username == "admin" || u.Username == "root" || u.Username == "administrator" {
 		return errors.New("invalid name")
