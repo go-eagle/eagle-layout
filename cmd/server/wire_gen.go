@@ -7,7 +7,7 @@
 package main
 
 import (
-	"eagle-test6/internal/server"
+	"github.com/go-eagle/eagle-layout/internal/server"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/transport/grpc"
