@@ -36,7 +36,7 @@ all: lint test build
 .PHONY: build
 # make build, Build the binary file
 build: 
-	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o build/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
+	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
 
 .PHONY: run
 # make run, run current project

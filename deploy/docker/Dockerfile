@@ -43,9 +43,9 @@ WORKDIR /bin
 ENV APP_ENV prod
 
 # 从builder镜像中把 /build 拷贝到当前目录
-COPY --from=builder /go/bin/eagle-layout          /bin/eagle-layout
-COPY --from=builder /go/src/eagle-layout/config   /data/conf/eagle-layout/config
-COPY --from=builder /go/bin/grpc_health_probe 	  /bin/grpc_health_probe
+COPY --from=builder /go/src/eagle-layout/bin/eagle-layout   /bin/eagle-layout
+COPY --from=builder /go/src/eagle-layout/config             /data/conf/eagle-layout/config
+COPY --from=builder /go/bin/grpc_health_probe 	            /bin/grpc_health_probe
 
 RUN apk update \
  && apk add --no-cache curl jq \
