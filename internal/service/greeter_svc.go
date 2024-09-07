@@ -3,29 +3,42 @@ package service
 import (
 	"context"
 
+	pb "github.com/go-eagle/eagle-layout/api/helloworld/greeter/v1"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 )
 
-// GreeterService define a interface
-type GreeterService interface {
-	Hello(ctx context.Context, name string) (string, error)
-}
+var (
+	_ pb.GreeterServiceServer = (*GreeterServiceServer)(nil)
+)
 
-// greeterService define a struct
-type greeterService struct {
+type GreeterServiceServer struct {
+	pb.UnimplementedGreeterServiceServer
+
 	repo repository.UserRepo
 }
 
-var _ GreeterService = (*greeterService)(nil)
-
-// NewGreeterService create a service
-func NewGreeterService(repo repository.UserRepo) GreeterService {
-	return &greeterService{
+func NewGreeterServiceServer(repo repository.UserRepo) *GreeterServiceServer {
+	return &GreeterServiceServer{
 		repo: repo,
 	}
 }
 
-// Hello .
-func (s *greeterService) Hello(ctx context.Context, name string) (string, error) {
-	return "hello " + name, nil
+func (s *GreeterServiceServer) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
+	return &pb.HelloReply{
+		Message: "hello " + req.Name,
+	}, nil
+}
+func (s *GreeterServiceServer) GetUserInfo(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserReply, error) {
+	userInfo, err := s.repo.GetUser(ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetUserReply{
+		User: &pb.User{
+			Id:       userInfo.ID,
+			Username: userInfo.Username,
+			Nickname: userInfo.Nickname,
+		},
+	}, nil
 }

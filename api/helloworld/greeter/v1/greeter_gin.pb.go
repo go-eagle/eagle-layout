@@ -1,5 +1,5 @@
 // Code generated protoc-gen-go-gin. DO NOT EDIT.
-// protoc-gen-go-gin 0.0.6
+// protoc-gen-go-gin 0.0.14
 
 package v1
 
@@ -18,24 +18,25 @@ import (
 // metadata.
 // gin.app.errcode.
 
-type GreeterHTTPServer interface {
+type GreeterServiceHTTPServer interface {
+	GetUserInfo(context.Context, *GetUserRequest) (*GetUserReply, error)
 	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
 }
 
-func RegisterGreeterHTTPServer(r gin.IRouter, srv GreeterHTTPServer) {
-	s := Greeter{
+func RegisterGreeterServiceHTTPServer(r gin.IRouter, srv GreeterServiceHTTPServer) {
+	s := GreeterService{
 		server: srv,
 		router: r,
 	}
 	s.RegisterService()
 }
 
-type Greeter struct {
-	server GreeterHTTPServer
+type GreeterService struct {
+	server GreeterServiceHTTPServer
 	router gin.IRouter
 }
 
-func (s *Greeter) SayHello_0(ctx *gin.Context) {
+func (s *GreeterService) SayHello_0(ctx *gin.Context) {
 	var in HelloRequest
 
 	if err := ctx.ShouldBindQuery(&in); err != nil {
@@ -48,7 +49,7 @@ func (s *Greeter) SayHello_0(ctx *gin.Context) {
 		md.Set(k, v...)
 	}
 	newCtx := metadata.NewIncomingContext(ctx, md)
-	out, err := s.server.(GreeterHTTPServer).SayHello(newCtx, &in)
+	out, err := s.server.(GreeterServiceHTTPServer).SayHello(newCtx, &in)
 	if err != nil {
 		app.Error(ctx, err)
 		return
@@ -57,6 +58,29 @@ func (s *Greeter) SayHello_0(ctx *gin.Context) {
 	app.Success(ctx, out)
 }
 
-func (s *Greeter) RegisterService() {
+func (s *GreeterService) GetUserInfo_0(ctx *gin.Context) {
+	var in GetUserRequest
+
+	if err := ctx.ShouldBindQuery(&in); err != nil {
+		app.Error(ctx, errcode.ErrInvalidParam.WithDetails(err.Error()))
+		return
+	}
+
+	md := metadata.New(nil)
+	for k, v := range ctx.Request.Header {
+		md.Set(k, v...)
+	}
+	newCtx := metadata.NewIncomingContext(ctx, md)
+	out, err := s.server.(GreeterServiceHTTPServer).GetUserInfo(newCtx, &in)
+	if err != nil {
+		app.Error(ctx, err)
+		return
+	}
+
+	app.Success(ctx, out)
+}
+
+func (s *GreeterService) RegisterService() {
 	s.router.Handle("GET", "/v1/helloworld", s.SayHello_0)
+	s.router.Handle("GET", "/v1/users/info", s.GetUserInfo_0)
 }
