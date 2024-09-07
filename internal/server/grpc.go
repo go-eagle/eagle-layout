@@ -11,10 +11,10 @@ func NewGRPCServer(cfg *app.Config) *grpc.Server {
 		grpc.Network("tcp"),
 		grpc.Address(cfg.GRPC.Addr),
 		grpc.Timeout(cfg.GRPC.ReadTimeout),
+		grpc.EnableLog(),
 	)
 
 	// register biz service
-	// v1.RegisterUserServiceServer(grpcServer, service.Svc.Users())
 
 	return grpcServer
 }

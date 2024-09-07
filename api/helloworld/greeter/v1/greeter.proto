@@ -4,16 +4,25 @@ package helloworld.greeter.v1;
 
 import "google/api/annotations.proto";
 import "validate/validate.proto";
+import "gogo/protobuf/gogo.proto";
+
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.unmarshaler_all) = true;
 
 option go_package="github.com/go-eagle/eagle-layout/api/helloworld/greeter/v1;v1";
 
 // The greeting service definition.
-service Greeter {
+service GreeterService {
   // Sends a greeting
   rpc SayHello (HelloRequest) returns (HelloReply) {
     option (google.api.http) = {
         get: "/v1/helloworld"
         body: "*"
+    };
+  }
+  rpc GetUserInfo (GetUserRequest) returns (GetUserReply) {
+    option (google.api.http) = {
+        get: "/v1/users/info"
     };
   }
 }
@@ -26,4 +35,28 @@ message HelloRequest {
 // The response message containing the greetings
 message HelloReply {
   string message = 1;
+}
+
+message User {
+  int64 id = 1;
+  string username = 2 [(gogoproto.jsontag) = 'form:"username"'];
+  string email = 3;
+  string phone = 4;
+  int64 last_login_at = 5;
+  int32 status = 6;
+  string nickname = 7 [(gogoproto.jsontag) = 'form:"nickname"'];
+  string avatar = 8;
+  int32 gender = 9;
+  string birthday = 10;
+  string bio = 11;
+  int64 created_at = 12;
+  int64 updated_at = 13;
+}
+
+message GetUserRequest {
+  int64 user_id = 1 [(gogoproto.moretags) = 'form:"user_id"'];
+}
+
+message GetUserReply {
+  User user = 1;
 }

@@ -1,6 +1,8 @@
 package model
 
 import (
+	"context"
+
 	"github.com/go-eagle/eagle/pkg/storage/orm"
 	"gorm.io/gorm"
 )
@@ -10,8 +12,12 @@ var (
 	DB *gorm.DB
 )
 
+type DBClient struct {
+	db *gorm.DB
+}
+
 // Init init db
-func Init() (*gorm.DB, func(), error) {
+func Init() (*DBClient, func(), error) {
 	err := orm.New([]string{"default"}...)
 	if err != nil {
 		return nil, nil, err
@@ -27,11 +33,30 @@ func Init() (*gorm.DB, func(), error) {
 		return nil, nil, err
 	}
 
-	// here you can add second or more db, and remember to add close to below cleanFunc
-	// ...
-
 	cleanFunc := func() {
 		sqlDB.Close()
 	}
-	return DB, cleanFunc, nil
+	return &DBClient{db: DB}, cleanFunc, nil
+}
+
+func (c *DBClient) GetDB() *gorm.DB {
+	return c.db
+}
+
+type contextTxKey struct{}
+
+// ExecTx gorm Transaction
+func (c *DBClient) ExecTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	return c.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		ctx = context.WithValue(ctx, contextTxKey{}, tx)
+		return fn(ctx)
+	})
+}
+
+func (c *DBClient) DBTx(ctx context.Context) *gorm.DB {
+	tx, ok := ctx.Value(contextTxKey{}).(*gorm.DB)
+	if ok {
+		return tx
+	}
+	return c.db
 }

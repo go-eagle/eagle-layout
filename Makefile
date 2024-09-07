@@ -151,6 +151,9 @@ init:
 	go install github.com/golang/mock/mockgen@latest
 	go install github.com/favadi/protoc-go-inject-tag@latest
 	go install github.com/envoyproxy/protoc-gen-validate@latest
+	go install github.com/gogo/protobuf/protoc-gen-gogo@latest
+	go install github.com/gogo/protobuf/protoc-gen-gogofast@latest
+	go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
 
 .PHONY: proto
 # generate proto struct with validate
@@ -162,22 +165,18 @@ proto:
            $(API_PROTO_FILES)
 
 .PHONY: grpc
-# generate grpc code
+# generate grpc code with remove omitempty from json tag
 grpc:
-	protoc --proto_path=. \
-           --proto_path=./third_party \
-           --go_out=. --go_opt=paths=source_relative \
-           --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-           $(API_PROTO_FILES)
-
-.PHONY: http
-# generate http code
-http:
-	protoc --proto_path=. \
-           --proto_path=./third_party \
-           --go_out=. --go_opt=paths=source_relative \
-           --go-gin_out=. --go-gin_opt=paths=source_relative \
-           $(API_PROTO_FILES)
+# note: --gogofaster_out full replace --go_out=. --go_opt=paths=source_relative
+	@for v in $(API_PROTO_FILES); do \
+  		echo "./$$v"; \
+		protoc --proto_path=. \
+			   --proto_path=./third_party \
+				 --gogofast_out=. --gogofast_opt=paths=source_relative \
+         --go-gin_out=. --go-gin_opt=paths=source_relative \
+         --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+			   "./$$v"; \
+    done
 
 .PHONY: tag
 # add custom tag to pb struct

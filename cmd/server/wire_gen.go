@@ -7,9 +7,14 @@
 package main
 
 import (
+	"github.com/go-eagle/eagle-layout/internal/cache"
+	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
+	"github.com/go-eagle/eagle-layout/internal/service"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/log"
+	"github.com/go-eagle/eagle/pkg/redis"
 	"github.com/go-eagle/eagle/pkg/transport/grpc"
 	"github.com/go-eagle/eagle/pkg/transport/http"
 )
@@ -21,10 +26,24 @@ import (
 // Injectors from wire.go:
 
 func InitApp(cfg *app.Config) (*app.App, func(), error) {
-	httpServer := server.NewHTTPServer(cfg)
+	dbClient, cleanup, err := model.Init()
+	if err != nil {
+		return nil, nil, err
+	}
+	client, cleanup2, err := redis.Init()
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	userCache := cache.NewUserCache(client)
+	userRepo := repository.NewUserRepo(dbClient, userCache)
+	greeterServiceServer := service.NewGreeterServiceServer(userRepo)
+	httpServer := server.NewHTTPServer(cfg, greeterServiceServer)
 	grpcServer := server.NewGRPCServer(cfg)
 	appApp := newApp(cfg, httpServer, grpcServer)
 	return appApp, func() {
+		cleanup2()
+		cleanup()
 	}, nil
 }
 

@@ -4,7 +4,10 @@
 package main
 
 import (
+	"github.com/go-eagle/eagle-layout/internal/cache"
+	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
+	"github.com/go-eagle/eagle-layout/internal/service"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/transport/grpc"
@@ -14,7 +17,7 @@ import (
 
 func InitApp(cfg *eagle.Config) (*eagle.App, func(), error) {
 	// wire.Build(server.ProviderSet, service.ProviderSet, repository.ProviderSet, cache.ProviderSet, newApp)
-	wire.Build(server.ProviderSet, newApp)
+	wire.Build(server.ProviderSet, service.ProviderSet, repository.ProviderSet, cache.ProviderSet, newApp)
 	return &eagle.App{}, nil, nil
 }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cast"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-	"gorm.io/gorm"
 
 	"github.com/go-eagle/eagle-layout/internal/cache"
 	"github.com/go-eagle/eagle-layout/internal/model"
@@ -35,13 +34,13 @@ type UserRepo interface {
 }
 
 type userRepo struct {
-	db     *gorm.DB
+	db     *model.DBClient
 	tracer trace.Tracer
 	cache  cache.UserCache
 }
 
 // NewUser new a repository and return
-func NewUserRepo(db *gorm.DB, cache cache.UserCache) UserRepo {
+func NewUserRepo(db *model.DBClient, cache cache.UserCache) UserRepo {
 	return &userRepo{
 		db:     db,
 		tracer: otel.Tracer("user"),
@@ -51,7 +50,7 @@ func NewUserRepo(db *gorm.DB, cache cache.UserCache) UserRepo {
 
 // CreateUser create a item
 func (r *userRepo) CreateUser(ctx context.Context, data *model.UserModel) (id int64, err error) {
-	err = r.db.WithContext(ctx).Create(&data).Error
+	err = r.db.GetDB().WithContext(ctx).Create(&data).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "[repo] create User err")
 	}
@@ -65,7 +64,7 @@ func (r *userRepo) UpdateUser(ctx context.Context, id int64, data *model.UserMod
 	if err != nil {
 		return errors.Wrapf(err, "[repo] update User err: %v", err)
 	}
-	err = r.db.Model(&item).Updates(data).Error
+	err = r.db.GetDB().Model(&item).Updates(data).Error
 	if err != nil {
 		return err
 	}
@@ -86,7 +85,7 @@ func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserModel,
 	}
 	// read db
 	data := new(model.UserModel)
-	err = r.db.WithContext(ctx).Raw(fmt.Sprintf(_getUserSQL, _tableUserName), id).Scan(&data).Error
+	err = r.db.GetDB().WithContext(ctx).Raw(fmt.Sprintf(_getUserSQL, _tableUserName), id).Scan(&data).Error
 	if err != nil {
 		return
 	}
@@ -121,7 +120,7 @@ func (r *userRepo) BatchGetUser(ctx context.Context, ids []int64) (ret []*model.
 	if len(missedID) > 0 {
 		var missedData []*model.UserModel
 		_sql := fmt.Sprintf(_batchGetUserSQL, _tableUserName, strings.Join(idsStr, ","))
-		err = r.db.WithContext(ctx).Raw(_sql).Scan(&missedData).Error
+		err = r.db.GetDB().WithContext(ctx).Raw(_sql).Scan(&missedData).Error
 		if err != nil {
 			// you can degrade to ignore error
 			return nil, err
