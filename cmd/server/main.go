@@ -21,6 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
+	logger "github.com/go-eagle/eagle/pkg/log"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 	_ "go.uber.org/automaxprocs"
@@ -60,6 +61,8 @@ func main() {
 	}
 	// set global
 	eagle.Conf = &cfg
+
+	logger.Init(logger.WithFilename("app"))
 
 	gin.SetMode(cfg.Mode)
 

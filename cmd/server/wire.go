@@ -22,8 +22,6 @@ func InitApp(cfg *eagle.Config) (*eagle.App, func(), error) {
 }
 
 func newApp(cfg *eagle.Config, hs *httpSrv.Server, gs *grpc.Server) *eagle.App {
-	logger.Init(logger.WithFilename("app"))
-
 	return eagle.New(
 		eagle.WithName(cfg.Name),
 		eagle.WithVersion(cfg.Version),
