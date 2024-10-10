@@ -2,8 +2,8 @@ SHELL := /bin/bash
 BASEDIR = $(shell pwd)
 
 # 可在make是带入参数进行替换
-# eg: make SERVICE_NAME=user-service build
-SERVICE_NAME?=user-service
+# eg: make SERVICE_NAME=eagle-service build
+SERVICE_NAME?=eagle-service
 
 # build with version infos
 versionDir = "github.com/go-eagle/eagle/pkg/version"
@@ -35,8 +35,10 @@ all: lint test build
 
 .PHONY: build
 # make build, Build the binary file
-build: 
-	GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o build/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
+build: wire
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME)-macos-arm64 cmd/server/main.go cmd/server/wire_gen.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME)-macos-amd64 cmd/server/main.go cmd/server/wire_gen.go
 
 .PHONY: run
 # make run, run current project
@@ -151,6 +153,7 @@ init:
 	go install github.com/golang/mock/mockgen@latest
 	go install github.com/favadi/protoc-go-inject-tag@latest
 	go install github.com/envoyproxy/protoc-gen-validate@latest
+	go install github.com/google/wire/cmd/wire@latest
 
 .PHONY: proto
 # generate proto struct with validate
