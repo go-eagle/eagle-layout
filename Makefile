@@ -200,6 +200,11 @@ doc:
 	   	  --doc_opt=html,index.html \
 	   	  $(API_PROTO_FILES)
 
+.PHONY: gorm-gen
+# generate gen file for gorm
+gorm-gen:
+	go run cmd/gen/generate.go
+
 # show help
 help:
 	@echo ''
