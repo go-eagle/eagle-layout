@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-eagle/eagle-layout/internal/cache"
-	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/dal/model"
 )
 
 var (

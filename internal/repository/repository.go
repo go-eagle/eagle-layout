@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/dal/model"
 	"github.com/google/wire"
 )
 

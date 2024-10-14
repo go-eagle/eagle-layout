@@ -8,7 +8,7 @@ package main
 
 import (
 	"github.com/go-eagle/eagle-layout/internal/cache"
-	"github.com/go-eagle/eagle-layout/internal/model"
+	"github.com/go-eagle/eagle-layout/internal/dal/model"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
 	"github.com/go-eagle/eagle-layout/internal/service"

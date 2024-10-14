@@ -1,4 +1,4 @@
-package jobs
+package mq_handler
 
 import (
 	"context"

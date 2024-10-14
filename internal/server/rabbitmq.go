@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/go-eagle/eagle-layout/internal/jobs"
+	mqHandler "github.com/go-eagle/eagle-layout/internal/mq_handler"
 	"github.com/go-eagle/eagle-layout/internal/tasks"
 	rabbitmqConf "github.com/go-eagle/eagle/pkg/queue/rabbitmq"
 	"github.com/go-eagle/eagle/pkg/transport/consumer/rabbitmq"
@@ -14,7 +14,7 @@ func NewRabbitmqConsumerServer() *rabbitmq.Server {
 	srv := rabbitmq.NewServer()
 
 	// register handler
-	srv.RegisterHandler(tasks.TypeEmailWelcome, jobs.SendWelcomeEmailHandler)
+	srv.RegisterHandler(tasks.TypeEmailWelcome, mqHandler.SendWelcomeEmailHandler)
 	// here register other handlers...
 
 	return srv
