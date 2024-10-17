@@ -4,6 +4,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,11 +22,12 @@ const (
 
 // UserCache define cache interface
 type UserCache interface {
-	SetUserCache(ctx context.Context, id int64, data *model.UserModel, duration time.Duration) error
-	GetUserCache(ctx context.Context, id int64) (data *model.UserModel, err error)
-	MultiGetUserCache(ctx context.Context, ids []int64) (map[string]*model.UserModel, error)
-	MultiSetUserCache(ctx context.Context, data []*model.UserModel, duration time.Duration) error
+	SetUserCache(ctx context.Context, id int64, data *model.UserInfoModel, duration time.Duration) error
+	GetUserCache(ctx context.Context, id int64) (data *model.UserInfoModel, err error)
+	MultiGetUserCache(ctx context.Context, ids []int64) (map[string]*model.UserInfoModel, error)
+	MultiSetUserCache(ctx context.Context, data []*model.UserInfoModel, duration time.Duration) error
 	DelUserCache(ctx context.Context, id int64) error
+	SetCacheWithNotFound(ctx context.Context, id int64) error
 }
 
 // userCache define cache struct
@@ -39,7 +41,7 @@ func NewUserCache(rdb *redis.Client) UserCache {
 	cachePrefix := ""
 	return &userCache{
 		cache: cache.NewRedisCache(rdb, cachePrefix, jsonEncoding, func() interface{} {
-			return &model.UserModel{}
+			return &model.UserInfoModel{}
 		}),
 	}
 }
@@ -50,7 +52,7 @@ func (c *userCache) GetUserCacheKey(id int64) string {
 }
 
 // SetUserCache write to cache
-func (c *userCache) SetUserCache(ctx context.Context, id int64, data *model.UserModel, duration time.Duration) error {
+func (c *userCache) SetUserCache(ctx context.Context, id int64, data *model.UserInfoModel, duration time.Duration) error {
 	if data == nil || id == 0 {
 		return nil
 	}
@@ -63,18 +65,18 @@ func (c *userCache) SetUserCache(ctx context.Context, id int64, data *model.User
 }
 
 // GetUserCache get from cache
-func (c *userCache) GetUserCache(ctx context.Context, id int64) (data *model.UserModel, err error) {
+func (c *userCache) GetUserCache(ctx context.Context, id int64) (data *model.UserInfoModel, err error) {
 	cacheKey := c.GetUserCacheKey(id)
 	err = c.cache.Get(ctx, cacheKey, &data)
-	if err != nil && err != redis.Nil {
-		log.WithContext(ctx).Warnf("get err from redis, err: %+v", err)
+	if err != nil && !errors.Is(err, redis.Nil) {
+		log.WithContext(ctx).Warnf("get err from redis, err: %v", err)
 		return nil, err
 	}
 	return data, nil
 }
 
 // MultiGetUserCache batch get cache
-func (c *userCache) MultiGetUserCache(ctx context.Context, ids []int64) (map[string]*model.UserModel, error) {
+func (c *userCache) MultiGetUserCache(ctx context.Context, ids []int64) (map[string]*model.UserInfoModel, error) {
 	var keys []string
 	for _, v := range ids {
 		cacheKey := c.GetUserCacheKey(v)
@@ -82,7 +84,7 @@ func (c *userCache) MultiGetUserCache(ctx context.Context, ids []int64) (map[str
 	}
 
 	// NOTE: 需要在这里make实例化，如果在返回参数里直接定义会报 nil map
-	retMap := make(map[string]*model.UserModel)
+	retMap := make(map[string]*model.UserInfoModel)
 	err := c.cache.MultiGet(ctx, keys, retMap)
 	if err != nil {
 		return nil, err
@@ -91,7 +93,7 @@ func (c *userCache) MultiGetUserCache(ctx context.Context, ids []int64) (map[str
 }
 
 // MultiSetUserCache batch set cache
-func (c *userCache) MultiSetUserCache(ctx context.Context, data []*model.UserModel, duration time.Duration) error {
+func (c *userCache) MultiSetUserCache(ctx context.Context, data []*model.UserInfoModel, duration time.Duration) error {
 	valMap := make(map[string]interface{})
 	for _, v := range data {
 		cacheKey := c.GetUserCacheKey(v.ID)

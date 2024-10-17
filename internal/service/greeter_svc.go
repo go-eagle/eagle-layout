@@ -2,9 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	pb "github.com/go-eagle/eagle-layout/api/helloworld/greeter/v1"
+	"github.com/go-eagle/eagle-layout/internal/ecode"
 	"github.com/go-eagle/eagle-layout/internal/repository"
+	"github.com/go-eagle/eagle/pkg/cache"
 )
 
 var (
@@ -31,7 +34,14 @@ func (s *GreeterServiceServer) SayHello(ctx context.Context, req *pb.HelloReques
 func (s *GreeterServiceServer) GetUserInfo(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserReply, error) {
 	userInfo, err := s.repo.GetUser(ctx, req.UserId)
 	if err != nil {
+		if errors.Is(err, cache.ErrPlaceholder) {
+			return nil, ecode.ErrNotFound.Status().Err()
+		}
 		return nil, err
+	}
+
+	if userInfo == nil {
+		return nil, ecode.ErrNotFound.Status().Err()
 	}
 
 	return &pb.GetUserReply{

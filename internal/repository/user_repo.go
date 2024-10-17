@@ -4,43 +4,38 @@ package repository
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cast"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 
 	"github.com/go-eagle/eagle-layout/internal/cache"
+	"github.com/go-eagle/eagle-layout/internal/dal"
 	"github.com/go-eagle/eagle-layout/internal/dal/model"
-)
-
-var (
-	_tableUserName   = (&model.UserModel{}).TableName()
-	_getUserSQL      = "SELECT * FROM %s WHERE id = ?"
-	_batchGetUserSQL = "SELECT * FROM %s WHERE id IN (%s)"
+	"github.com/go-eagle/eagle-layout/internal/dal/query"
 )
 
 var _ UserRepo = (*userRepo)(nil)
 
 // UserRepo define a repo interface
 type UserRepo interface {
-	CreateUser(ctx context.Context, data *model.UserModel) (id int64, err error)
-	UpdateUser(ctx context.Context, id int64, data *model.UserModel) error
-	GetUser(ctx context.Context, id int64) (ret *model.UserModel, err error)
-	BatchGetUser(ctx context.Context, ids []int64) (ret []*model.UserModel, err error)
+	CreateUser(ctx context.Context, data model.UserInfoModel) (id int64, err error)
+	UpdateUser(ctx context.Context, id int64, data model.UserInfoModel) error
+	GetUser(ctx context.Context, id int64) (ret *model.UserInfoModel, err error)
+	BatchGetUser(ctx context.Context, ids []int64) (ret []*model.UserInfoModel, err error)
 }
 
 type userRepo struct {
-	db     *model.DBClient
+	db     *dal.DBClient
 	tracer trace.Tracer
 	cache  cache.UserCache
 }
 
 // NewUser new a repository and return
-func NewUserRepo(db *model.DBClient, cache cache.UserCache) UserRepo {
+func NewUserRepo(db *dal.DBClient, cache cache.UserCache) UserRepo {
 	return &userRepo{
 		db:     db,
 		tracer: otel.Tracer("user"),
@@ -49,8 +44,8 @@ func NewUserRepo(db *model.DBClient, cache cache.UserCache) UserRepo {
 }
 
 // CreateUser create a item
-func (r *userRepo) CreateUser(ctx context.Context, data *model.UserModel) (id int64, err error) {
-	err = r.db.GetDB().WithContext(ctx).Create(&data).Error
+func (r *userRepo) CreateUser(ctx context.Context, data model.UserInfoModel) (id int64, err error) {
+	err = query.UserInfoModel.WithContext(ctx).Create(&data)
 	if err != nil {
 		return 0, errors.Wrap(err, "[repo] create User err")
 	}
@@ -59,12 +54,8 @@ func (r *userRepo) CreateUser(ctx context.Context, data *model.UserModel) (id in
 }
 
 // UpdateUser update item
-func (r *userRepo) UpdateUser(ctx context.Context, id int64, data *model.UserModel) error {
-	item, err := r.GetUser(ctx, id)
-	if err != nil {
-		return errors.Wrapf(err, "[repo] update User err: %v", err)
-	}
-	err = r.db.GetDB().Model(&item).Updates(data).Error
+func (r *userRepo) UpdateUser(ctx context.Context, id int64, data model.UserInfoModel) error {
+	_, err := query.UserInfoModel.WithContext(ctx).Where(query.UserInfoModel.ID.Eq(id)).Updates(data)
 	if err != nil {
 		return err
 	}
@@ -74,7 +65,7 @@ func (r *userRepo) UpdateUser(ctx context.Context, id int64, data *model.UserMod
 }
 
 // GetUser get a record
-func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserModel, err error) {
+func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserInfoModel, err error) {
 	// read cache
 	item, err := r.cache.GetUserCache(ctx, id)
 	if err != nil {
@@ -83,14 +74,18 @@ func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserModel,
 	if item != nil {
 		return item, nil
 	}
+
 	// read db
-	data := new(model.UserModel)
-	err = r.db.GetDB().WithContext(ctx).Raw(fmt.Sprintf(_getUserSQL, _tableUserName), id).Scan(&data).Error
+	data, err := query.UserInfoModel.WithContext(ctx).Where(query.UserInfoModel.ID.Eq(id)).First()
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.cache.SetCacheWithNotFound(ctx, id)
+		}
 		return
 	}
+
 	// write cache
-	if data.ID > 0 {
+	if data != nil && data.ID > 0 {
 		err = r.cache.SetUserCache(ctx, id, data, 5*time.Minute)
 		if err != nil {
 			return nil, err
@@ -100,9 +95,8 @@ func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserModel,
 }
 
 // BatchGetUser batch get items
-func (r *userRepo) BatchGetUser(ctx context.Context, ids []int64) (ret []*model.UserModel, err error) {
+func (r *userRepo) BatchGetUser(ctx context.Context, ids []int64) (ret []*model.UserInfoModel, err error) {
 	// read cache
-	idsStr := cast.ToStringSlice(ids)
 	itemMap, err := r.cache.MultiGetUserCache(ctx, ids)
 	if err != nil {
 		return nil, err
@@ -116,11 +110,10 @@ func (r *userRepo) BatchGetUser(ctx context.Context, ids []int64) (ret []*model.
 		}
 		ret = append(ret, item)
 	}
+
 	// get missed data
 	if len(missedID) > 0 {
-		var missedData []*model.UserModel
-		_sql := fmt.Sprintf(_batchGetUserSQL, _tableUserName, strings.Join(idsStr, ","))
-		err = r.db.GetDB().WithContext(ctx).Raw(_sql).Scan(&missedData).Error
+		missedData, err := query.UserInfoModel.WithContext(ctx).Where(query.UserInfoModel.ID.In(ids...)).Find()
 		if err != nil {
 			// you can degrade to ignore error
 			return nil, err

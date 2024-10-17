@@ -29,7 +29,7 @@ import (
 
 var (
 	cfgDir  = pflag.StringP("config dir", "c", "config", "config path.")
-	env     = pflag.StringP("env name", "e", "", "env var name.")
+	env     = pflag.StringP("env name", "e", "dev", "env var name.")
 	version = pflag.BoolP("version", "v", false, "show version info.")
 )
 

@@ -1,7 +1,7 @@
 Name: eagle
 Version: 1.0.0
 PprofPort: :5555
-Mode: debug                 # debug, release, test
+Mode: test # debug, release, test
 JwtSecret: JWT_SECRET
 JwtTimeout: 86400
 CookieName: jwt-token

@@ -8,7 +8,7 @@ package main
 
 import (
 	"github.com/go-eagle/eagle-layout/internal/cache"
-	"github.com/go-eagle/eagle-layout/internal/dal/model"
+	"github.com/go-eagle/eagle-layout/internal/dal"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
 	"github.com/go-eagle/eagle-layout/internal/service"
@@ -26,7 +26,7 @@ import (
 // Injectors from wire.go:
 
 func InitApp(cfg *app.Config) (*app.App, func(), error) {
-	dbClient, cleanup, err := model.Init()
+	dbClient, cleanup, err := dal.Init()
 	if err != nil {
 		return nil, nil, err
 	}
