@@ -3,7 +3,7 @@ package dal
 import (
 	"context"
 
-	"github.com/go-eagle/eagle-layout/internal/dal/query"
+	"github.com/go-eagle/eagle-layout/internal/repository/dal/query"
 	"github.com/go-eagle/eagle/pkg/storage/orm"
 	"gorm.io/gorm"
 )
@@ -19,6 +19,10 @@ type DBClient struct {
 
 // Init init db
 func Init() (*DBClient, func(), error) {
+	// new gorm logger writer with custom filename for sql
+	// orm.LogWriter = orm.NewLogWriter(log.New(log.WithFilename("mysql")))
+
+	// new db
 	err := orm.New([]string{"default"}...)
 	if err != nil {
 		return nil, nil, err

@@ -7,6 +7,7 @@ import (
 
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
+	logger "github.com/go-eagle/eagle/pkg/log"
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 
@@ -41,6 +42,8 @@ func main() {
 	}
 	// set global
 	eagle.Conf = &cfg
+
+	logger.Init(logger.WithFilename("consumer"))
 
 	// load config
 	c = config.New(*cfgDir, config.WithEnv(*env))

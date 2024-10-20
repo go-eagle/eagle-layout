@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-eagle/eagle-layout/internal/dal/model"
+	"github.com/go-eagle/eagle-layout/internal/repository/dal/model"
 	"github.com/go-eagle/eagle/pkg/cache"
 	"github.com/go-eagle/eagle/pkg/encoding"
 	"github.com/go-eagle/eagle/pkg/log"

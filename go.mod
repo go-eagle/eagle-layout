@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/envoyproxy/protoc-gen-validate v1.0.2
 	github.com/gin-gonic/gin v1.9.0
-	github.com/go-eagle/eagle v1.9.0
+	github.com/go-eagle/eagle v1.9.1-0.20241020110908-0a1f7a28cb1c
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/wire v0.5.0
 	github.com/hibiken/asynq v0.23.0
@@ -28,7 +28,6 @@ require (
 )
 
 require (
-	github.com/1024casts/gorm-opentelemetry v1.0.1-0.20210805144709-183269b54068 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
@@ -128,6 +127,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.opentelemetry.io/contrib v0.22.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.45.0 // indirect
+	go.opentelemetry.io/contrib/propagators v0.22.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
@@ -151,4 +151,5 @@ require (
 	gorm.io/driver/mysql v1.5.2 // indirect
 	gorm.io/driver/postgres v1.5.4 // indirect
 	gorm.io/hints v1.1.0 // indirect
+	gorm.io/plugin/opentelemetry v0.1.4 // indirect
 )

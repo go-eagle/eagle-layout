@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/go-eagle/eagle-layout/internal/dal/model"
+	"github.com/go-eagle/eagle-layout/internal/repository/dal/model"
 )
 
 func newUserInfoModel(db *gorm.DB, opts ...gen.DOOption) userInfoModel {

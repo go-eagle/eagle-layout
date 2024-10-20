@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/pflag"
 	"gorm.io/gen"
 
-	"github.com/go-eagle/eagle-layout/internal/dal"
-	"github.com/go-eagle/eagle-layout/internal/dal/method"
+	"github.com/go-eagle/eagle-layout/internal/repository/dal"
+	"github.com/go-eagle/eagle-layout/internal/repository/dal/method"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	v "github.com/go-eagle/eagle/pkg/version"
@@ -47,8 +47,8 @@ func main() {
 	dal.Init()
 
 	g := gen.NewGenerator(gen.Config{
-		OutPath:      "./internal/dal/query",
-		ModelPkgPath: "./internal/dal/model",                        // 默认情况下会跟随OutPath参数，在同目录下生成model目录
+		OutPath:      "./internal/repository/dal/query",
+		ModelPkgPath: "./internal/repository/dal/model",             // 默认情况下会跟随OutPath参数，在同目录下生成model目录
 		Mode:         gen.WithDefaultQuery | gen.WithQueryInterface, // generate mode
 	})
 

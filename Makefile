@@ -35,9 +35,9 @@ all: lint test build
 
 .PHONY: build
 # make build, Build the binary file
-build: 
+build: wire
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME)-consumer cmd/consumer/main.go cmd/server/wire_gen.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME)-consumer cmd/consumer/main.go cmd/consumer/wire_gen.go
 
 .PHONY: run
 # make run, run current project
@@ -48,6 +48,7 @@ run: wire
 # make wire, generate wire_gen.go
 wire:
 	cd cmd/server && wire
+	cd cmd/consumer && wire
 
 .PHONY: fmt
 # make fmt

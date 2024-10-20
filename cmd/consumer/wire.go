@@ -16,7 +16,7 @@ import (
 )
 
 func InitApp(cfg *eagle.Config, config *eagle.ServerConfig, tc *tasks.Config) (*eagle.App, func(), error) {
-	wire.Build(server.ProviderSetForConsumer, newApp)
+	wire.Build(server.ProviderSet, newApp)
 	return &eagle.App{}, nil, nil
 }
 
@@ -24,8 +24,6 @@ func InitApp(cfg *eagle.Config, config *eagle.ServerConfig, tc *tasks.Config) (*
 // 默认使用 redis, 如果使用 rabbitmq 可以改为: rs *rabbitmq.Server
 // 然后执行 wire
 func newApp(cfg *eagle.Config, hs *httpSrv.Server, rs *redisMQ.Server) *eagle.App {
-	logger.Init(logger.WithFilename("consumer"))
-
 	return eagle.New(
 		eagle.WithName(cfg.Name),
 		eagle.WithVersion(cfg.Version),

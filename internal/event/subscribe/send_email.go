@@ -1,4 +1,4 @@
-package mq_handler
+package subscribe
 
 import (
 	"context"
