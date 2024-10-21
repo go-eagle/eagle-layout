@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/pflag"
 	"gorm.io/gen"
 
-	"github.com/go-eagle/eagle-layout/internal/repository/dal"
-	"github.com/go-eagle/eagle-layout/internal/repository/dal/method"
+	"github.com/go-eagle/eagle-layout/internal/dal"
+	"github.com/go-eagle/eagle-layout/internal/dal/db/method"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	v "github.com/go-eagle/eagle/pkg/version"

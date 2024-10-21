@@ -3,7 +3,6 @@ package dal
 import (
 	"context"
 
-	"github.com/go-eagle/eagle-layout/internal/repository/dal/query"
 	"github.com/go-eagle/eagle/pkg/storage/orm"
 	"gorm.io/gorm"
 )
@@ -38,7 +37,7 @@ func Init() (*DBClient, func(), error) {
 		return nil, nil, err
 	}
 
-	query.SetDefault(DB)
+	// query.SetDefault(DB)
 
 	cleanFunc := func() {
 		sqlDB.Close()

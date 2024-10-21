@@ -48,7 +48,6 @@ run: wire
 # make wire, generate wire_gen.go
 wire:
 	cd cmd/server && wire
-	cd cmd/consumer && wire
 
 .PHONY: fmt
 # make fmt

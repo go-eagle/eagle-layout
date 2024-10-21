@@ -12,10 +12,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 
-	"github.com/go-eagle/eagle-layout/internal/repository/cache"
-	"github.com/go-eagle/eagle-layout/internal/repository/dal"
-	"github.com/go-eagle/eagle-layout/internal/repository/dal/model"
-	"github.com/go-eagle/eagle-layout/internal/repository/dal/query"
+	"github.com/go-eagle/eagle-layout/internal/dal"
+	"github.com/go-eagle/eagle-layout/internal/dal/cache"
+	"github.com/go-eagle/eagle-layout/internal/dal/db/model"
+	"github.com/go-eagle/eagle-layout/internal/dal/db/query"
 )
 
 var _ UserRepo = (*userRepo)(nil)
