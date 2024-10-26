@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cast"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-	"gorm.io/gorm"
 
 	"github.com/go-eagle/eagle-layout/internal/dal"
 	"github.com/go-eagle/eagle-layout/internal/dal/cache"

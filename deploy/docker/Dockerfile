@@ -48,13 +48,12 @@ COPY --from=builder /go/src/eagle-layout/config             /data/conf/eagle-lay
 COPY --from=builder /go/bin/grpc_health_probe 	            /bin/grpc_health_probe
 
 RUN apk update \
- && apk add --no-cache curl jq \
- && rm -rf /var/cache/apk/* \
- && mkdir -p  /data/logs/
+    && apk add --no-cache curl jq \
+    && rm -rf /var/cache/apk/* \
+    && mkdir -p  /data/logs/
 
 # Expose port 8080 and 9090 to the outside world
 EXPOSE 8080
-EXPOSE 9090
 
 # 需要运行的命令
 CMD ["/bin/eagle-layout", "-c", "/data/conf/eagle-layout/config"]

@@ -2,8 +2,8 @@ SHELL := /bin/bash
 BASEDIR = $(shell pwd)
 
 # 可在make是带入参数进行替换
-# eg: make SERVICE_NAME=user-service build
-SERVICE_NAME?=user-service
+# eg: make SERVICE_NAME=eagle-service build
+SERVICE_NAME?=eagle-service
 
 # build with version infos
 versionDir = "github.com/go-eagle/eagle/pkg/version"
@@ -37,7 +37,7 @@ all: lint test build
 # make build, Build the binary file
 build: wire
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME)-consumer cmd/consumer/main.go cmd/consumer/wire_gen.go
+#	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME)-consumer cmd/consumer/main.go cmd/consumer/wire_gen.go
 
 .PHONY: run
 # make run, run current project
@@ -155,6 +155,7 @@ init:
 	go install github.com/gogo/protobuf/protoc-gen-gogo@latest
 	go install github.com/gogo/protobuf/protoc-gen-gogofast@latest
 	go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+	go install github.com/google/wire/cmd/wire@latest
 
 .PHONY: proto
 # generate proto struct with validate
