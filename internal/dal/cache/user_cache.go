@@ -12,12 +12,13 @@ import (
 	"github.com/go-eagle/eagle/pkg/cache"
 	"github.com/go-eagle/eagle/pkg/encoding"
 	"github.com/go-eagle/eagle/pkg/log"
+	"github.com/go-eagle/eagle/pkg/utils"
 	"github.com/redis/go-redis/v9"
 )
 
-const (
+var (
 	// PrefixUserCacheKey cache prefix
-	PrefixUserCacheKey = "user:%d"
+	PrefixUserCacheKey = utils.ConcatString(prefix, "user:%d")
 )
 
 // UserCache define cache interface
