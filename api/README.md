@@ -43,6 +43,16 @@ proto 文件存放位置
 
 在根目录下执行以下命令
 
-`go run main.go`
+`make run`
 
 grpc即可正常启动
+
+## 注意事项
+
+各版本对应组合，否则可能会有报错
+
+protoc v3.18.1
+protoc-gen-go v1.27.1
+protoc-gen-go-grpc v1.1.0
+grpc v1.43.0
+protobuf v1.33.0

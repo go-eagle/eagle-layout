@@ -18,7 +18,7 @@ const (
 
 // EmailWelcomePayload payload data for task
 type EmailWelcomePayload struct {
-	UserID int
+	UserID int64
 }
 
 //----------------------------------------------

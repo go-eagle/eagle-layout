@@ -13,15 +13,15 @@ type UserInfoModel struct {
 	Nickname  string `gorm:"column:nickname;not null;comment:用户昵称" json:"nickname"` // 用户昵称
 	Password  string `gorm:"column:password;not null" json:"password"`
 	Avatar    string `gorm:"column:avatar;not null;comment:头像" json:"avatar"` // 头像
-	Gender    bool   `gorm:"column:gender;not null" json:"gender"`
+	Gender    int32  `gorm:"column:gender;not null" json:"gender"`
 	Birthday  string `gorm:"column:birthday;not null" json:"birthday"`
-	Phone     int64  `gorm:"column:phone;not null;comment:手机号" json:"phone"` // 手机号
+	Phone     string `gorm:"column:phone;not null;comment:手机号" json:"phone"` // 手机号
 	Email     string `gorm:"column:email;not null;comment:邮箱" json:"email"`  // 邮箱
 	Bio       string `gorm:"column:bio;not null" json:"bio"`
-	CreatedAt int32  `gorm:"column:created_at;not null" json:"created_at"`
-	UpdatedAt int32  `gorm:"column:updated_at;not null" json:"updated_at"`
-	LoginAt   int32  `gorm:"column:login_at;not null" json:"login_at"`
-	Status    bool   `gorm:"column:status;not null" json:"status"`
+	CreatedAt int64  `gorm:"column:created_at;not null" json:"created_at"`
+	UpdatedAt int64  `gorm:"column:updated_at;not null" json:"updated_at"`
+	LoginAt   int64  `gorm:"column:login_at;not null" json:"login_at"`
+	Status    int32  `gorm:"column:status;not null" json:"status"`
 }
 
 // TableName UserInfoModel's table name

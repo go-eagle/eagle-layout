@@ -1,0 +1,197 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "validate/validate.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/go-eagle/eagle-layout/api/user/v1;v1";
+
+// 用户服务
+service UserService {
+  // auth
+  // sign up
+  rpc Register(RegisterRequest) returns (RegisterReply) {
+    option (google.api.http) = {
+        post: "/v1/auth/register"
+        body: "*"
+    };
+  }
+  // sign in
+  rpc Login(LoginRequest) returns (LoginReply) {
+    option (google.api.http) = {
+        post: "/v1/auth/login"
+        body: "*"
+    };
+  }
+  // logout 
+  rpc Logout(LogoutRequest) returns (LogoutReply) {
+    option (google.api.http) = {
+        post: "/v1/auth/logout"
+        body: "*"
+    };
+  }
+
+  // user
+  rpc CreateUser(CreateUserRequest) returns(CreateUserReply) {
+    option (google.api.http) = {
+        post: "/v1/users/"
+        body: "*"
+    };
+  }
+  rpc GetUser(GetUserRequest) returns (GetUserReply) {
+    option (google.api.http) = {
+        get: "/v1/users/{id}"
+        body: "*"
+    };
+  }
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersReply) {
+    option (google.api.http) = {
+        get: "/v1/users/batch"
+        body: "*"
+    };
+  }
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserReply) {
+    option (google.api.http) = {
+        put: "/v1/users"
+        body: "*"
+    };
+  }
+  rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordReply) {
+    option (google.api.http) = {
+        post: "/v1/users/password"
+        body: "*"
+    };
+  }
+}
+
+// 用户状态
+enum StatusType {
+  NORMAL = 0;
+  DELETE = 1;
+  Ban = 2;
+}
+
+// 性别
+enum GenderType {
+  UNKNOWN = 0;
+  MALE = 1;
+  FEMALE = 2;
+};
+
+// user info
+message User {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  int64  last_login_at = 5;
+  StatusType status = 6;
+  string nickname = 7;
+  string avatar = 8;
+  GenderType gender = 9;
+  string birthday = 10;
+  string bio = 11;
+  int64 created_at = 12;
+  int64 updated_at = 13;
+}
+
+message RegisterRequest {
+  string username = 1 [(validate.rules).string.min_len = 6];
+  string email = 2 [(validate.rules).string.email = true];
+  string password = 3 [(validate.rules).string.min_len = 6];
+}
+
+message RegisterReply {
+  int64 id = 1;
+  string username = 2;
+}
+
+message LoginRequest {
+  string username = 1 [(validate.rules).string.min_len = 6];
+  string email = 2 [(validate.rules).string.email = true];
+  string password = 3 [(validate.rules).string.min_len = 6];
+}
+
+message LoginReply {
+  int64 id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message LogoutRequest {
+  int64 id = 1 [(validate.rules).int64.gte  = 1];
+  string access_token = 2 [(validate.rules).string.min_len  = 20];
+}
+
+message LogoutReply {
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message CreateUserReply {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+}
+
+message UpdateUserRequest {
+  int64 user_id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  int64  login_at = 5;
+  StatusType status = 6;
+  string nickname = 7;
+  string avatar = 8;
+  GenderType gender = 9;
+  string birthday = 10;
+  string bio = 11;
+  int64 updated_at = 13;
+}
+
+message UpdateUserReply {
+  int64 user_id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  int64  login_at = 5;
+  StatusType status = 6;
+  string nickname = 7;
+  string avatar = 8;
+  GenderType gender = 9;
+  string birthday = 10;
+  string bio = 11;
+  int64 updated_at = 13;
+}
+
+message UpdatePasswordRequest {
+  string id = 1;
+  string password = 2;
+  string new_password = 3;
+  string confirm_password = 4;
+}
+
+message UpdatePasswordReply {
+
+}
+
+message GetUserRequest {
+  int64 id = 1;
+}
+
+message GetUserReply {
+  User user = 1;
+}
+
+message BatchGetUsersRequest {
+  repeated int64 ids = 1;
+}
+
+message BatchGetUsersReply {
+  repeated User users = 1;
+}
