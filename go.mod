@@ -6,9 +6,11 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.0.2
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-eagle/eagle v1.9.1-0.20241020110908-0a1f7a28cb1c
+	github.com/go-microservice/user-service v0.0.0-20240822145227-ee87e3a8f671
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/wire v0.5.0
 	github.com/hibiken/asynq v0.23.0
+	github.com/jinzhu/copier v0.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rabbitmq/amqp091-go v1.8.1
@@ -22,6 +24,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98
 	google.golang.org/grpc v1.58.3
 	google.golang.org/protobuf v1.33.0
+	gorm.io/driver/sqlite v1.5.0
 	gorm.io/gen v0.3.26
 	gorm.io/gorm v1.25.10
 	gorm.io/plugin/dbresolver v1.5.0
@@ -88,6 +91,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

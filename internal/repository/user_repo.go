@@ -14,8 +14,8 @@ import (
 
 	"github.com/go-eagle/eagle-layout/internal/dal"
 	"github.com/go-eagle/eagle-layout/internal/dal/cache"
+	"github.com/go-eagle/eagle-layout/internal/dal/db/dao"
 	"github.com/go-eagle/eagle-layout/internal/dal/db/model"
-	"github.com/go-eagle/eagle-layout/internal/dal/db/query"
 )
 
 var _ UserRepo = (*userRepo)(nil)
@@ -25,7 +25,10 @@ type UserRepo interface {
 	CreateUser(ctx context.Context, data model.UserInfoModel) (id int64, err error)
 	UpdateUser(ctx context.Context, id int64, data model.UserInfoModel) error
 	GetUser(ctx context.Context, id int64) (ret *model.UserInfoModel, err error)
-	BatchGetUser(ctx context.Context, ids []int64) (ret []*model.UserInfoModel, err error)
+	BatchGetUsers(ctx context.Context, ids []int64) (ret []*model.UserInfoModel, err error)
+	GetUserByUsername(ctx context.Context, username string) (ret *model.UserInfoModel, err error)
+	GetUserByEmail(ctx context.Context, email string) (ret *model.UserInfoModel, err error)
+	GetUserByPhone(ctx context.Context, phone string) (ret *model.UserInfoModel, err error)
 }
 
 type userRepo struct {
@@ -45,7 +48,7 @@ func NewUserRepo(db *dal.DBClient, cache cache.UserCache) UserRepo {
 
 // CreateUser create a item
 func (r *userRepo) CreateUser(ctx context.Context, data model.UserInfoModel) (id int64, err error) {
-	err = query.UserInfoModel.WithContext(ctx).Create(&data)
+	err = dao.UserInfoModel.WithContext(ctx).Create(&data)
 	if err != nil {
 		return 0, errors.Wrap(err, "[repo] create User err")
 	}
@@ -55,7 +58,7 @@ func (r *userRepo) CreateUser(ctx context.Context, data model.UserInfoModel) (id
 
 // UpdateUser update item
 func (r *userRepo) UpdateUser(ctx context.Context, id int64, data model.UserInfoModel) error {
-	_, err := query.UserInfoModel.WithContext(ctx).Where(query.UserInfoModel.ID.Eq(id)).Updates(data)
+	_, err := dao.UserInfoModel.WithContext(ctx).Where(dao.UserInfoModel.ID.Eq(id)).Updates(data)
 	if err != nil {
 		return err
 	}
@@ -76,7 +79,7 @@ func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserInfoMo
 	}
 
 	// read db
-	data, err := query.UserInfoModel.WithContext(ctx).Where(query.UserInfoModel.ID.Eq(id)).First()
+	data, err := dao.UserInfoModel.WithContext(ctx).Where(dao.UserInfoModel.ID.Eq(id)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.cache.SetCacheWithNotFound(ctx, id)
@@ -95,7 +98,7 @@ func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserInfoMo
 }
 
 // BatchGetUser batch get items
-func (r *userRepo) BatchGetUser(ctx context.Context, ids []int64) (ret []*model.UserInfoModel, err error) {
+func (r *userRepo) BatchGetUsers(ctx context.Context, ids []int64) (ret []*model.UserInfoModel, err error) {
 	// read cache
 	itemMap, err := r.cache.MultiGetUserCache(ctx, ids)
 	if err != nil {
@@ -113,7 +116,7 @@ func (r *userRepo) BatchGetUser(ctx context.Context, ids []int64) (ret []*model.
 
 	// get missed data
 	if len(missedID) > 0 {
-		missedData, err := query.UserInfoModel.WithContext(ctx).Where(query.UserInfoModel.ID.In(ids...)).Find()
+		missedData, err := dao.UserInfoModel.WithContext(ctx).Where(dao.UserInfoModel.ID.In(ids...)).Find()
 		if err != nil {
 			// you can degrade to ignore error
 			return nil, err
@@ -127,5 +130,32 @@ func (r *userRepo) BatchGetUser(ctx context.Context, ids []int64) (ret []*model.
 			}
 		}
 	}
+	return ret, nil
+}
+
+func (r *userRepo) GetUserByUsername(ctx context.Context, username string) (ret *model.UserInfoModel, err error) {
+	ret, err = dao.UserInfoModel.WithContext(ctx).GetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
+func (r *userRepo) GetUserByEmail(ctx context.Context, email string) (ret *model.UserInfoModel, err error) {
+	ret, err = dao.UserInfoModel.WithContext(ctx).GetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
+func (r *userRepo) GetUserByPhone(ctx context.Context, phone string) (ret *model.UserInfoModel, err error) {
+	ret, err = dao.UserInfoModel.WithContext(ctx).GetUserByPhone(phone)
+	if err != nil {
+		return
+	}
+
 	return ret, nil
 }
