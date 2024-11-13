@@ -22,7 +22,7 @@ ENV GO111MODULE=on \
     APP_ENV=docker
 
 # 移动到工作目录
-WORKDIR /go/src/eagle-lagout
+WORKDIR /go/src/eagle-layout
 
 # 复制项目中的 go.mod 和 go.sum文件并下载依赖信息
 COPY go.mod .
