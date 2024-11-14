@@ -4,6 +4,7 @@ package user.v1;
 
 import "validate/validate.proto";
 import "google/api/annotations.proto";
+import "gogo/protobuf/gogo.proto";
 
 option go_package = "github.com/go-eagle/eagle-layout/api/user/v1;v1";
 
@@ -190,6 +191,7 @@ message GetUserReply {
 
 message BatchGetUsersRequest {
   repeated int64 ids = 1;
+  // int64 ids = 1 [(gogoproto.moretags) = 'form:"ids"'];
 }
 
 message BatchGetUsersReply {

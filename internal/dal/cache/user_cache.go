@@ -70,7 +70,7 @@ func (c *userCache) GetUserCache(ctx context.Context, id int64) (data *model.Use
 	cacheKey := c.GetUserCacheKey(id)
 	err = c.cache.Get(ctx, cacheKey, &data)
 	if err != nil && !errors.Is(err, redis.Nil) {
-		log.WithContext(ctx).Warnf("get err from redis, err: %v", err)
+		log.WithContext(ctx).Warnf("[cache] GetUserCache err: %v", err)
 		return nil, err
 	}
 	return data, nil

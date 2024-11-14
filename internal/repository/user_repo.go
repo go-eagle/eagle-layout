@@ -6,10 +6,13 @@ import (
 	"context"
 	"time"
 
+	localCache "github.com/go-eagle/eagle/pkg/cache"
+	"github.com/go-eagle/eagle/pkg/encoding"
 	"github.com/pkg/errors"
 	"github.com/spf13/cast"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/singleflight"
 	"gorm.io/gorm"
 
 	"github.com/go-eagle/eagle-layout/internal/dal"
@@ -32,17 +35,21 @@ type UserRepo interface {
 }
 
 type userRepo struct {
-	db     *dal.DBClient
-	tracer trace.Tracer
-	cache  cache.UserCache
+	db         *dal.DBClient
+	tracer     trace.Tracer
+	cache      cache.UserCache
+	localCache localCache.Cache
+	sg         singleflight.Group
 }
 
 // NewUser new a repository and return
 func NewUserRepo(db *dal.DBClient, cache cache.UserCache) UserRepo {
 	return &userRepo{
-		db:     db,
-		tracer: otel.Tracer("user"),
-		cache:  cache,
+		db:         db,
+		tracer:     otel.Tracer("user"),
+		cache:      cache,
+		localCache: localCache.NewMemoryCache("local:user:", encoding.JSONEncoding{}),
+		sg:         singleflight.Group{},
 	}
 }
 
@@ -69,32 +76,59 @@ func (r *userRepo) UpdateUser(ctx context.Context, id int64, data model.UserInfo
 
 // GetUser get a record
 func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserInfoModel, err error) {
-	// read cache
-	item, err := r.cache.GetUserCache(ctx, id)
+	// get data from local cache
+	err = r.localCache.Get(ctx, cast.ToString(id), &ret)
 	if err != nil {
 		return nil, err
 	}
-	if item != nil {
-		return item, nil
+	if ret != nil && ret.ID > 0 {
+		return ret, nil
 	}
 
-	// read db
-	data, err := dao.UserInfoModel.WithContext(ctx).Where(dao.UserInfoModel.ID.Eq(id)).First()
+	// read redis cache
+	ret, err = r.cache.GetUserCache(ctx, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			r.cache.SetCacheWithNotFound(ctx, id)
-		}
-		return
+		return nil, err
+	}
+	if ret != nil && ret.ID > 0 {
+		return ret, nil
 	}
 
-	// write cache
-	if data != nil && data.ID > 0 {
-		err = r.cache.SetUserCache(ctx, id, data, 5*time.Minute)
+	// get data from db
+	// 避免缓存击穿(瞬间有大量请求过来)
+	val, err, _ := r.sg.Do("sg:user:"+cast.ToString(id), func() (interface{}, error) {
+		// read db or rpc
+		data, err := dao.UserInfoModel.WithContext(ctx).Where(dao.UserInfoModel.ID.Eq(id)).First()
 		if err != nil {
-			return nil, err
+			// cache not found and set empty cache to avoid 缓存穿透
+			// Note: 如果缓存空数据太多，会大大降低缓存命中率，可以改为使用布隆过滤器
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				r.cache.SetCacheWithNotFound(ctx, id)
+			}
+			return nil, errors.Wrapf(err, "[repo] GetUser get User from db error, id: %d", id)
 		}
+
+		// write cache
+		if data != nil && data.ID > 0 {
+			// write redis
+			err = r.cache.SetUserCache(ctx, id, data, 5*time.Minute)
+			if err != nil {
+				return nil, errors.WithMessage(err, "[repo] GetUser SetUserCache error")
+			}
+
+			// write local cache
+			err = r.localCache.Set(ctx, cast.ToString(id), data, 2*time.Minute)
+			if err != nil {
+				return nil, errors.WithMessage(err, "[repo] GetUser localCache set error")
+			}
+		}
+		return data, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return data, nil
+
+	return val.(*model.UserInfoModel), nil
 }
 
 // BatchGetUser batch get items
