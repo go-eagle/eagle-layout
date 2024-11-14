@@ -47,10 +47,13 @@ func main() {
 	dal.Init()
 
 	g := gen.NewGenerator(gen.Config{
-		OutPath:      "./internal/dal/db/dao",                       // 生成的查询类代码的输出路径，默认./query, 这里改为dao
-		ModelPkgPath: "./internal/dal/db/model",                     // 默认情况下会跟随OutPath参数，在同目录下生成model目录
-		Mode:         gen.WithDefaultQuery | gen.WithQueryInterface, // generate mode
-		WithUnitTest: true,                                          // 为生成的查询类代码生成单元测试
+		OutPath:           "./internal/dal/db/dao",                       // 生成的查询类代码的输出路径，默认./query, 这里改为dao
+		ModelPkgPath:      "./internal/dal/db/model",                     // 默认情况下会跟随OutPath参数，在同目录下生成model目录
+		Mode:              gen.WithDefaultQuery | gen.WithQueryInterface, // generate mode
+		WithUnitTest:      true,                                          // 为生成的查询类代码生成单元测试
+		FieldNullable:     true,                                          // 对于数据库中nullable的数据，在生成代码中自动对应为指针类型
+		FieldWithIndexTag: true,                                          // 从数据库同步的表结构代码包含gorm的index tag
+		FieldWithTypeTag:  true,                                          // 同步的表结构代码包含gorm的type tag(数据库中对应数据类型)
 	})
 
 	g.UseDB(dal.DB) // reuse your gorm db

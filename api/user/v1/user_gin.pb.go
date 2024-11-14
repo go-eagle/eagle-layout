@@ -9,7 +9,7 @@ import (
 	gin "github.com/gin-gonic/gin"
 	app "github.com/go-eagle/eagle/pkg/app"
 	errcode "github.com/go-eagle/eagle/pkg/errcode"
-	"github.com/go-eagle/eagle/pkg/utils"
+	"github.com/spf13/cast"
 	metadata "google.golang.org/grpc/metadata"
 )
 
@@ -141,8 +141,7 @@ func (s *UserService) GetUser_0(ctx *gin.Context) {
 	}
 
 	// make sure the uri include :id
-	id, _ := utils.StringToInt64(ctx.Param("id"))
-	in.Id = id
+	in.Id = cast.ToInt64(ctx.Param("id"))
 
 	md := metadata.New(nil)
 	for k, v := range ctx.Request.Header {
