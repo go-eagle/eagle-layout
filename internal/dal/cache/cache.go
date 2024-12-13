@@ -13,4 +13,7 @@ const (
 )
 
 // ProviderSet is cache providers.
-var ProviderSet = wire.NewSet(redis.Init, NewUserCache)
+var ProviderSet = wire.NewSet(
+	redis.Init,
+	NewUserCache,
+)

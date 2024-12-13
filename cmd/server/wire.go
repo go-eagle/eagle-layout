@@ -5,6 +5,7 @@ package main
 
 import (
 	"github.com/go-eagle/eagle-layout/internal/dal/cache"
+	"github.com/go-eagle/eagle-layout/internal/handler"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
 	"github.com/go-eagle/eagle-layout/internal/service"
@@ -16,7 +17,15 @@ import (
 )
 
 func InitApp(cfg *eagle.Config) (*eagle.App, func(), error) {
-	wire.Build(server.ProviderSet, service.ProviderSet, repository.ProviderSet, cache.ProviderSet, newApp)
+	wire.Build(
+		server.ProviderSet,
+		service.ProviderSet,
+		repository.ProviderSet,
+		cache.ProviderSet,
+		newApp,
+		handler.ProviderSet,                    // 汇总所有 Handler 的依赖
+		wire.Struct(new(handler.Handler), "*"), // 自动注入到 Handler 结构
+	)
 	return &eagle.App{}, nil, nil
 }
 

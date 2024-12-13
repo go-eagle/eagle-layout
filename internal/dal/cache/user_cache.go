@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-eagle/eagle-layout/internal/dal/db/model"
 	"github.com/go-eagle/eagle/pkg/cache"
 	"github.com/go-eagle/eagle/pkg/encoding"
 	"github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/utils"
 	"github.com/redis/go-redis/v9"
+
+	"github.com/go-eagle/eagle-layout/internal/dal/db/model"
 )
 
 var (

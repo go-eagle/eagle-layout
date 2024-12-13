@@ -46,13 +46,14 @@ func NewRouter() *gin.Engine {
 	// metrics router 可以在 prometheus 中进行监控
 	// 通过 grafana 可视化查看 prometheus 的监控数据，使用插件6671查看
 	g.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	g.GET("/hello", handler.Hello)
 
 	// v1 router
 	apiV1 := g.Group("/v1")
 	apiV1.Use()
 	{
 		// here to add biz router
+		// apiV1.POST("/auth/register", Register)
+		apiV1.POST("/auth/login", handler.Handler.LoginHandler)
 	}
 
 	return g
