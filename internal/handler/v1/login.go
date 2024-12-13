@@ -9,21 +9,21 @@ import (
 
 // LoginHandler 包含 UserService
 type LoginHandler struct {
-	UserService *service.UserService
+	UserService service.UserService
 }
 
 // NewLoginHandler 创建一个新的 LoginHandler
-func NewLoginHandler(userService *service.UserService) *LoginHandler {
+func NewLoginHandler(userService service.UserService) *LoginHandler {
 	return &LoginHandler{UserService: userService}
 }
 
 // LoginHandler 登录
-// @Summary demo
+// @Summary 用户名和密码登录
 // @Description demo
 // @Tags user
 // @Accept  json
 // @Produce  json
-// @Router /v1/users/login [post]
+// @Router /v1/auth/login [post]
 func (h *LoginHandler) LoginHandler(c *gin.Context) {
 	// 从请求中提取参数（例如 JSON 或表单参数）
 	var loginRequest struct {

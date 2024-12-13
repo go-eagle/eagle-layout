@@ -3,15 +3,19 @@ package handler
 import (
 	"github.com/google/wire"
 
-	hanlderv1 "github.com/go-eagle/eagle-layout/internal/handler/v1"
+	v1 "github.com/go-eagle/eagle-layout/internal/handler/v1"
+	"github.com/go-eagle/eagle-layout/internal/service"
 )
 
-// ProviderSet is repo providers.
-var ProviderSet = wire.NewSet(
-	hanlderv1.NewLoginHandler,
+var authSet = wire.NewSet(
+	v1.NewLoginHandler,
 )
 
-type Handler struct {
-	LoginHandler *hanlderv1.LoginHandler
-	// more handlers
-}
+// here you can add other sets
+// ...
+
+// HandlerSet compose all services and all subsets.
+var HandlerSet = wire.NewSet(
+	service.ServiceSet,
+	authSet,
+)

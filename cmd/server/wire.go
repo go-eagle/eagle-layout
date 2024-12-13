@@ -4,29 +4,30 @@
 package main
 
 import (
-	"github.com/go-eagle/eagle-layout/internal/dal/cache"
-	"github.com/go-eagle/eagle-layout/internal/handler"
-	"github.com/go-eagle/eagle-layout/internal/repository"
-	"github.com/go-eagle/eagle-layout/internal/server"
-	"github.com/go-eagle/eagle-layout/internal/service"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/transport/grpc"
 	httpSrv "github.com/go-eagle/eagle/pkg/transport/http"
 	"github.com/google/wire"
+
+	"github.com/go-eagle/eagle-layout/internal/handler"
+	v1 "github.com/go-eagle/eagle-layout/internal/handler/v1"
+	"github.com/go-eagle/eagle-layout/internal/server"
 )
 
-func InitApp(cfg *eagle.Config) (*eagle.App, func(), error) {
+type Application struct {
+	*eagle.App
+	LoginHandler *v1.LoginHandler
+}
+
+func InitApp(cfg *eagle.Config) (*Application, func(), error) {
 	wire.Build(
-		server.ProviderSet,
-		service.ProviderSet,
-		repository.ProviderSet,
-		cache.ProviderSet,
+		server.ServerSet,
+		handler.HandlerSet, // 汇总所有 Handler 的依赖
 		newApp,
-		handler.ProviderSet,                    // 汇总所有 Handler 的依赖
-		wire.Struct(new(handler.Handler), "*"), // 自动注入到 Handler 结构
+		wire.Struct(new(Application), "*"),
 	)
-	return &eagle.App{}, nil, nil
+	return &Application{}, nil, nil
 }
 
 func newApp(cfg *eagle.Config, hs *httpSrv.Server, gs *grpc.Server) *eagle.App {
