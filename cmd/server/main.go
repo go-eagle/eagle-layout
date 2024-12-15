@@ -19,6 +19,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-eagle/eagle-layout/internal/handler"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
@@ -74,9 +75,17 @@ func main() {
 		}
 	}()
 
+	// init handler for http server that only use gin router
+	h, cleanup1, err := handler.NewHandler()
+	defer cleanup1()
+	if err != nil {
+		panic(err)
+	}
+	handler.Handle = h
+
 	// start app
-	app, cleanup, err := InitApp(&cfg)
-	defer cleanup()
+	app, cleanup2, err := InitApp(&cfg)
+	defer cleanup2()
 	if err != nil {
 		panic(err)
 	}

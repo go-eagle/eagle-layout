@@ -12,20 +12,17 @@ import (
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
 	"github.com/go-eagle/eagle-layout/internal/service"
+	"github.com/go-eagle/eagle-layout/internal/tasks"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/redis"
-	"github.com/go-eagle/eagle/pkg/transport/grpc"
+	redis2 "github.com/go-eagle/eagle/pkg/transport/consumer/redis"
 	"github.com/go-eagle/eagle/pkg/transport/http"
-)
-
-import (
-	_ "go.uber.org/automaxprocs"
 )
 
 // Injectors from wire.go:
 
-func InitApp(cfg *app.Config) (*app.App, func(), error) {
+func InitApp(cfg *app.Config, config *app.ServerConfig, tc *tasks.Config) (*app.App, func(), error) {
 	dbClient, cleanup, err := dal.Init()
 	if err != nil {
 		return nil, nil, err
@@ -39,8 +36,8 @@ func InitApp(cfg *app.Config) (*app.App, func(), error) {
 	userRepo := repository.NewUserRepo(dbClient, userCache)
 	userServiceServer := service.NewUserServiceServer(userRepo)
 	httpServer := server.NewHTTPServer(cfg, userServiceServer)
-	grpcServer := server.NewGRPCServer(cfg, userServiceServer)
-	appApp := newApp(cfg, httpServer, grpcServer)
+	redisServer := server.NewRedisConsumerServer(tc)
+	appApp := newApp(cfg, httpServer, redisServer)
 	return appApp, func() {
 		cleanup2()
 		cleanup()
@@ -49,12 +46,15 @@ func InitApp(cfg *app.Config) (*app.App, func(), error) {
 
 // wire.go:
 
-func newApp(cfg *app.Config, hs *http.Server, gs *grpc.Server) *app.App {
+// 第三个参数需要根据使用的server 进行调整
+// 默认使用 redis, 如果使用 rabbitmq 可以改为: rs *rabbitmq.Server
+// 然后执行 wire
+func newApp(cfg *app.Config, hs *http.Server, rs *redis2.Server) *app.App {
 	return app.New(app.WithName(cfg.Name), app.WithVersion(cfg.Version), app.WithLogger(log.GetLogger()), app.WithServer(
 
 		hs,
 
-		gs,
+		rs,
 	),
 	)
 }

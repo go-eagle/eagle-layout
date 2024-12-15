@@ -2,8 +2,13 @@ package repository
 
 import (
 	"github.com/go-eagle/eagle-layout/internal/dal"
+	"github.com/go-eagle/eagle-layout/internal/dal/cache"
 	"github.com/google/wire"
 )
 
-// ProviderSet is repo providers.
-var ProviderSet = wire.NewSet(dal.Init, NewUserRepo)
+// RepositorySet is repo providers.
+var RepositorySet = wire.NewSet(
+	dal.Init,
+	NewUserRepo,
+	cache.CacheSet,
+)

@@ -2,7 +2,13 @@ package service
 
 import (
 	"github.com/google/wire"
+
+	"github.com/go-eagle/eagle-layout/internal/repository"
 )
 
-// ProviderSet is service providers.
-var ProviderSet = wire.NewSet(NewUserServiceServer)
+// ServiceSet is service providers.
+var ServiceSet = wire.NewSet(
+	NewUserServiceServer, // for grpc(inlucde http from grpc)
+	NewUserService,       // for http
+	repository.RepositorySet,
+)
