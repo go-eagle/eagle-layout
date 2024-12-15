@@ -9,6 +9,7 @@ import (
 // UserService define a interface
 type UserService interface {
 	Login(ctx context.Context, username, password string) (string, error)
+	Register(ctx context.Context, username, password string) (string, error)
 }
 
 // greeterService define a struct
@@ -19,7 +20,7 @@ type userService struct {
 var _ UserService = (*userService)(nil)
 
 // NewUserService create a service
-func NewUserService(repo repository.UserRepo) UserService {
+func NewUserService(repo repository.UserRepo) *userService {
 	return &userService{
 		repo: repo,
 	}
@@ -28,4 +29,8 @@ func NewUserService(repo repository.UserRepo) UserService {
 // Hello .
 func (s *userService) Login(ctx context.Context, username, password string) (string, error) {
 	return "hello " + username, nil
+}
+
+func (s *userService) Register(ctx context.Context, username, password string) (string, error) {
+	return "register success, username: " + username, nil
 }

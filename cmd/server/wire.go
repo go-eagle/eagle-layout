@@ -10,24 +10,15 @@ import (
 	httpSrv "github.com/go-eagle/eagle/pkg/transport/http"
 	"github.com/google/wire"
 
-	"github.com/go-eagle/eagle-layout/internal/handler"
-	v1 "github.com/go-eagle/eagle-layout/internal/handler/v1"
 	"github.com/go-eagle/eagle-layout/internal/server"
 )
 
-type Application struct {
-	*eagle.App
-	LoginHandler *v1.LoginHandler
-}
-
-func InitApp(cfg *eagle.Config) (*Application, func(), error) {
+func InitApp(cfg *eagle.Config) (*eagle.App, func(), error) {
 	wire.Build(
 		server.ServerSet,
-		handler.HandlerSet, // 汇总所有 Handler 的依赖
 		newApp,
-		wire.Struct(new(Application), "*"),
 	)
-	return &Application{}, nil, nil
+	return &eagle.App{}, nil, nil
 }
 
 func newApp(cfg *eagle.Config, hs *httpSrv.Server, gs *grpc.Server) *eagle.App {

@@ -12,6 +12,8 @@ import (
 
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/middleware"
+
+	"github.com/go-eagle/eagle-layout/internal/handler"
 )
 
 // NewRouter loads the middlewares, routes, handlers.
@@ -47,12 +49,12 @@ func NewRouter() *gin.Engine {
 	g.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// v1 router
-	apiV1 := g.Group("/v1")
+	apiV1 := g.Group("/v2")
 	apiV1.Use()
 	{
 		// here to add biz router
-		// apiV1.POST("/auth/register", Register)
-		// apiV1.POST("/auth/login", handler.Handler.LoginHandler)
+		apiV1.POST("/auth/register", handler.Handle.Register.RegisterHandler)
+		apiV1.POST("/auth/login", handler.Handle.Login.LoginHandler)
 	}
 
 	return g

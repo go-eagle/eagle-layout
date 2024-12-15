@@ -2,6 +2,8 @@ package server
 
 import (
 	"github.com/google/wire"
+
+	"github.com/go-eagle/eagle-layout/internal/service"
 )
 
 // ServerSet is server providers.
@@ -10,4 +12,5 @@ var ServerSet = wire.NewSet(
 	NewHTTPServer,
 	NewGRPCServer,
 	NewRedisConsumerServer,
+	service.ServiceSet,
 )
