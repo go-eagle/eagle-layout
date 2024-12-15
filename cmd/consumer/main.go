@@ -11,6 +11,7 @@ import (
 	v "github.com/go-eagle/eagle/pkg/version"
 	"github.com/spf13/pflag"
 
+	"github.com/go-eagle/eagle-layout/internal/handler"
 	"github.com/go-eagle/eagle-layout/internal/tasks"
 )
 
@@ -51,6 +52,14 @@ func main() {
 	if err := c.Load("consumer", &taskCfg); err != nil {
 		panic(err)
 	}
+
+	// init handler for http server that only use gin router
+	h, cleanup1, err := handler.NewHandler()
+	defer cleanup1()
+	if err != nil {
+		panic(err)
+	}
+	handler.Handle = h
 
 	// start app
 	app, cleanup, err := InitApp(&cfg, &cfg.HTTP, &taskCfg)

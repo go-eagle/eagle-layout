@@ -16,7 +16,10 @@ import (
 )
 
 func InitApp(cfg *eagle.Config, config *eagle.ServerConfig, tc *tasks.Config) (*eagle.App, func(), error) {
-	wire.Build(server.ServerSet, newApp)
+	wire.Build(
+		server.ServerSet,
+		newApp,
+	)
 	return &eagle.App{}, nil, nil
 }
 
