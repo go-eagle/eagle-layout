@@ -7,7 +7,7 @@
 关于事务的使用，在 service 层开始事务，将待执行的 repo 方法封装在 fn 参数中，  
 传递给 gorm 实例的 Transaction() 方法待执行。
 
-同时在 Transcation 内部，触发 `fn()` 函数，也就是聚合的N个 repo 操作，  
+同时在 Transaction 内部，触发 `fn()` 函数，也就是聚合的N个 repo 操作，  
 需要注意的是，此时 `contextTxKey` 将携带事务 tx 的 ctx 作为参数传递给了  
 `fn` 函数，因此下游的两个 repo 可以获取到 service 层的事务会话。
 
@@ -53,6 +53,37 @@ func (r *greeterRepo) Update(ctx context.Context, g *model.Greeter) (*model.Gree
         return nil, fmt.Errorf("greeter %s not found", g.Hello)
     }
     return nil, fmt.Errorf("custom error")
+}
+```
+
+## 使用 `gorm/gen` 事务
+
+gorm/gen 生成的代码中，没有使用事务，需要手动添加事务支持。 
+
+```go
+import (
+	"context"
+
+	"github.com/go-eagle/eagle-layout/internal/dal"
+	"github.com/go-eagle/eagle-layout/internal/dal/db/dao"
+)
+
+func doSomething(ctx context.Context, id int64, data model.UserInfoModel) error {
+    ...
+	query := dao.Use(dal.DB)
+
+    // 开始事务
+    // 在事务内部，使用 gen 生成的 Query 进行多表操作
+	query.Transaction(func(tx *dao.Query) error {
+		_, err = tx.UserInfoModel.WithContext(ctx).Where(tx.UserInfoModel.ID.Eq(id)).Updates(data)
+		if err != nil {
+			return err
+		}
+		// 其他db操作
+		// ...
+		return nil
+	})
+    ...
 }
 ```
 

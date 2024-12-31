@@ -58,6 +58,7 @@ func main() {
 
 	g.UseDB(dal.DB) // reuse your gorm db
 
+	// ------ 生成基本的CRUD方法 ------
 	// 可直接指定结构体
 	// Generate basic type-safe DAO API for struct `model.User` following conventions
 	// g.ApplyBasic(model.UserModel{})
@@ -68,6 +69,7 @@ func main() {
 	// 指定别名 {table_name} -> {model_name}
 	// g.ApplyBasic(g.GenerateModelAs("user_info", "UserInfoModel"))
 
+	// ------ 生成自定义方法 ------
 	// Generate Type Safe API with Dynamic SQL defined on Querier interface for `model.UserInfo`
 	g.ApplyInterface(func(method.Querier) {},
 		g.GenerateModelAs("user_info", "UserInfoModel",
