@@ -2,7 +2,7 @@ SHELL := /bin/bash
 BASEDIR = $(shell pwd)
 
 # 可在make是带入参数进行替换
-# eg: make SERVICE_NAME=eagle-service build
+# usage: SERVICE_NAME=eagle-service make build 
 SERVICE_NAME?=eagle-service
 
 # build with version infos
@@ -14,15 +14,12 @@ gitTreeState = $(shell if git status|grep -q 'clean';then echo clean; else echo 
 
 ldflags="-w -X ${versionDir}.gitTag=${gitTag} -X ${versionDir}.buildDate=${buildDate} -X ${versionDir}.gitCommit=${gitCommit} -X ${versionDir}.gitTreeState=${gitTreeState}"
 
-PROJECT_NAME := "github.com/go-eagle/eagle-layout"
-PKG := "$(PROJECT_NAME)"
-PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
+PKG_LIST := $(shell go list ./... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
 # proto
-APP_RELATIVE_PATH=$(shell a=`basename $$PWD` && echo $$b)
-API_PROTO_FILES=$(shell find api$(APP_RELATIVE_PATH) -name *.proto)
-API_PROTO_PB_FILES=$(shell find api$(APP_RELATIVE_PATH) -name *.pb.go)
+API_PROTO_FILES=$(shell find api -name *.proto)
+API_PROTO_PB_FILES=$(shell find api -name *.pb.go)
 
 # init environment variables
 export PATH        := $(shell go env GOPATH)/bin:$(PATH)
@@ -35,7 +32,7 @@ all: lint test build
 
 .PHONY: build
 # make build, Build the binary file
-build: wire
+build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME) cmd/server/main.go cmd/server/wire_gen.go
 #	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags ${ldflags} -o bin/$(SERVICE_NAME)-consumer cmd/consumer/main.go cmd/consumer/wire_gen.go
 
@@ -92,15 +89,20 @@ cover:
 view-cover:
 	go tool cover -html=coverage.txt -o coverage.html
 
-.PHONY: docker
-# make docker  生成docker镜像
-docker:
-	docker build -t eagle:$(versionDir) -f deploy/docker/Dockeffile .
+.PHONY: image
+# make image  生成docker镜像, eg: make image GIT_TAG=v1.0.0
+image:
+	sh deploy/docker_image.sh ${SERVICE_NAME} $(GIT_TAG)
+
+.PHONY: deploy
+# make deploy  deploy app to k8s, eg: make deploy GIT_TAG=v1.0.0
+deploy:
+	sh deploy/deploy.sh ${SERVICE_NAME} $(GIT_TAG)
 
 .PHONY: clean
 # make clean
 clean:
-	@-rm -vrf eagle
+	@-rm -vrf bin/${SERVICE_NAME}
 	@-rm -vrf cover.out
 	@-rm -vrf coverage.txt
 	@go mod tidy

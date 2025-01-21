@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.16.5-alpine3.12 AS builder
+FROM golang:1.22-alpine3.20 AS builder
 
 # The latest alpine images don't have some tools like (`git` and `bash`).
 # Adding git, bash and openssh to the image
@@ -8,9 +8,9 @@ RUN apk add --no-cache git make bash ca-certificates tzdata \
     --repository http://mirrors.aliyun.com/alpine/v3.11/main
 
 RUN GRPC_HEALTH_PROBE_VERSION=v0.3.0 && \
-    wget -qO/bin/grpc_health_probe \
+    wget -qO/go/bin/grpc_health_probe \
     https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
-    chmod +x /bin/grpc_health_probe
+    chmod +x /go/bin/grpc_health_probe
 
 # 镜像设置必要的环境变量
 ENV GO111MODULE=on \
@@ -36,16 +36,16 @@ COPY config ./config
 RUN make build
 
 # Final stage
-FROM alpine:3.15
+FROM alpine:3.20
 
 WORKDIR /bin
 
-ENV APP_ENV prod
+# ENV APP_ENV=prod
 
 # 从builder镜像中把 /build 拷贝到当前目录
-COPY --from=builder /go/src/eagle-layout/bin/eagle-layout   /bin/eagle-layout
+COPY --from=builder /go/src/eagle-layout/bin/eagle-layout  /bin/eagle-layout
 COPY --from=builder /go/src/eagle-layout/config             /data/conf/eagle-layout/config
-COPY --from=builder /go/bin/grpc_health_probe 	            /bin/grpc_health_probe
+COPY --from=builder /go/bin/grpc_health_probe 	             /bin/grpc_health_probe
 
 RUN apk update \
     && apk add --no-cache curl jq \
@@ -54,6 +54,7 @@ RUN apk update \
 
 # Expose port 8080 and 9090 to the outside world
 EXPOSE 8080
+EXPOSE 9090
 
 # 需要运行的命令
 CMD ["/bin/eagle-layout", "-c", "/data/conf/eagle-layout/config"]
