@@ -82,12 +82,12 @@ vet:
 .PHONY: cover
 # make cover
 cover:
-	@go test -short -coverprofile=coverage.txt -covermode=atomic ${PKG_LIST}
+	@go test -short -coverprofile=coverage.out -covermode=atomic ${PKG_LIST}
 
 .PHONY: view-cover
-# make view-cover  preview coverage
-view-cover:
-	go tool cover -html=coverage.txt -o coverage.html
+# make view-cover  preview coverage report
+view-cover: cover
+	go tool cover -html=coverage.out
 
 .PHONY: image
 # make image  生成docker镜像, eg: make image GIT_TAG=v1.0.0

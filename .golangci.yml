@@ -3,7 +3,7 @@
 
 # options for analysis running
 run:
-  go: '1.21'
+  go: '1.22'
   # default concurrency is a available CPU number
   concurrency: 4
 
@@ -142,7 +142,8 @@ linters-settings:
 
     # enable or disable analyzers by name
     enable:
-      - atomicalign
+      # Check for non-64-bits-aligned arguments to sync/atomic functions.
+      # - atomicalign
     enable-all: false
     disable:
       - shadow

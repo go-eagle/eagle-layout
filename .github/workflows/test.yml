@@ -52,10 +52,10 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      # - name: Run Unit tests
-      #   run: |
-      #     make test
-      #     make cover
+      - name: Run Unit tests
+        run: |
+          make test
+          make cover
 
       - name: Upload Coverage to CodeCov
         uses: codecov/codecov-action@v3
