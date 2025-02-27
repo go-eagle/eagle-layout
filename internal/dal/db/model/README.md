@@ -58,7 +58,7 @@ func (r *greeterRepo) Update(ctx context.Context, g *model.Greeter) (*model.Gree
 
 ## 方式二: 使用 `gorm/gen` 事务
 
-gorm/gen 生成的代码中，没有使用事务，需要手动添加事务支持。 
+在 `repo` 层里，使用 `gorm/gen` 生成的代码，使用 `Transaction` 手动添加事务支持
 
 ```go
 import (
@@ -89,4 +89,5 @@ func doSomething(ctx context.Context, id int64, data model.UserInfoModel) error 
 
 ## References
 
+- https://gorm.io/gen/transaction.html
 - https://juejin.cn/post/7399984522094149659?share_token=B3E5040F-3BC1-481A-A700-AFCF37F124BC
