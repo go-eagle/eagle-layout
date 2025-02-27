@@ -1,8 +1,8 @@
 # Models
 
-数据模型层
+数据库使用的两种方式
 
-## 特别说明
+## 方式一: 使用 `ExecTx` 和 `DBTx`
 
 关于事务的使用，在 service 层开始事务，将待执行的 repo 方法封装在 fn 参数中，  
 传递给 gorm 实例的 Transaction() 方法待执行。
@@ -56,7 +56,7 @@ func (r *greeterRepo) Update(ctx context.Context, g *model.Greeter) (*model.Gree
 }
 ```
 
-## 使用 `gorm/gen` 事务
+## 方式二: 使用 `gorm/gen` 事务
 
 gorm/gen 生成的代码中，没有使用事务，需要手动添加事务支持。 
 
