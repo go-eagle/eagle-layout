@@ -21,3 +21,4 @@ cmd/consumer/consumer
 cmd/server/server
 coverage.txt
 bin
+.claude/settings.local.json
