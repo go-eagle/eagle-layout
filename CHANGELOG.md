@@ -1,4 +1,9 @@
 
+## v1.0.3
+
+- docs: add Claude.md for Claude Code
+- chore: upgrade eagle to v1.11.0
+
 ## v1.0.2
 
 - chore: optimize cmd/server/main.go
