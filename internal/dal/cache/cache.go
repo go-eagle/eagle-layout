@@ -12,5 +12,8 @@ const (
 	prefix = "eagle:"
 )
 
-// ProviderSet is cache providers.
-var ProviderSet = wire.NewSet(redis.Init, NewUserCache)
+// CacheSet is cache providers.
+var CacheSet = wire.NewSet(
+	redis.Init,
+	NewUserCache,
+)

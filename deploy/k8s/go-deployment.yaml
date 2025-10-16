@@ -21,7 +21,7 @@ spec:
     spec: # Pod里容器相关的定义
       containers:
         - name: go-app-container
-          image: go-eagle/go-app:v1.0.0
+          image: go-microservices/eagle-service:v1.0.0
           resources:
             limits:
               memory: "128Mi"

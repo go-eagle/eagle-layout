@@ -23,12 +23,13 @@ func Init() (*DBClient, func(), error) {
 	// orm.LogWriter = orm.NewLogWriter(log.New(log.WithFilename("mysql")))
 
 	// new db
+	// 支持多个数据库，配置在 config/{env}/database.yaml 中
 	err := orm.New([]string{"default"}...)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// get first db
+	// get default db
 	DB, err = orm.GetDB("default")
 	if err != nil {
 		return nil, nil, err

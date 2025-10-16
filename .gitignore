@@ -12,6 +12,7 @@
 *.out
 
 .idea
+.vscode
 
 # Dependency directories (remove the comment below to include it)
 vendor/
@@ -19,6 +20,7 @@ logs
 eagle-layout
 cmd/consumer/consumer
 cmd/server/server
-coverage.txt
+coverage.out
+internal/dal/db/dao/gen_test.db
 bin
 .claude/settings.local.json
