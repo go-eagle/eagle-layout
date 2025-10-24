@@ -47,7 +47,8 @@ func (s *UserServiceServer) Register(ctx context.Context, req *pb.RegisterReques
 	}
 
 	var userBase *model.UserInfoModel
-	// check user is existed
+
+	// check user is existed by email
 	userBase, err = s.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
@@ -57,6 +58,8 @@ func (s *UserServiceServer) Register(ctx context.Context, req *pb.RegisterReques
 	if userBase != nil && userBase.ID > 0 {
 		return nil, ecode.ErrUserIsExist.Status(req).Err()
 	}
+
+	// check user is existed by username
 	userBase, err = s.repo.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
@@ -121,6 +124,8 @@ func (s *UserServiceServer) Login(ctx context.Context, req *pb.LoginRequest) (*p
 		user *model.UserInfoModel
 		err  error
 	)
+
+	// try to get user by email first
 	if req.Email != "" {
 		user, err = s.repo.GetUserByEmail(ctx, req.Email)
 		if err != nil {
@@ -129,6 +134,8 @@ func (s *UserServiceServer) Login(ctx context.Context, req *pb.LoginRequest) (*p
 			})).Status(req).Err()
 		}
 	}
+
+	// if not found by email, try username
 	if user == nil && len(req.Username) > 0 {
 		user, err = s.repo.GetUserByUsername(ctx, req.Username)
 		if err != nil {
@@ -137,6 +144,8 @@ func (s *UserServiceServer) Login(ctx context.Context, req *pb.LoginRequest) (*p
 			})).Status(req).Err()
 		}
 	}
+
+	// user not found, return password incorrect error (security best practice)
 	if user == nil || user.ID == 0 {
 		return nil, ecode.ErrPasswordIncorrect.Status(req).Err()
 	}
