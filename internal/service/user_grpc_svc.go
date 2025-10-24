@@ -19,6 +19,7 @@ import (
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/auth"
 	"github.com/go-eagle/eagle/pkg/errcode"
+	"github.com/go-eagle/eagle/pkg/log"
 )
 
 var (
@@ -354,7 +355,7 @@ func (s *UserServiceServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetU
 		}
 		u, err := convertUser(user)
 		if err != nil {
-			// record log
+			log.Errorf("[BatchGetUsers] convertUser error: %v", err)
 			continue
 		}
 		users = append(users, u)

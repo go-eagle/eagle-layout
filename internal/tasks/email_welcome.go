@@ -28,10 +28,13 @@ type EmailWelcomePayload struct {
 
 // NewEmailWelcomeTask create a task
 func NewEmailWelcomeTask(data EmailWelcomePayload) error {
-	payload, _ := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrapf(err, "[tasks] Marshal payload error, name: %s", TypeEmailWelcome)
+	}
 
 	task := asynq.NewTask(TypeEmailWelcome, payload)
-	_, err := GetClient().Enqueue(task)
+	_, err = GetClient().Enqueue(task)
 
 	// // 即时消息
 	// _, err := GetClient().Enqueue(task)

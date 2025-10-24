@@ -128,7 +128,12 @@ func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserInfoMo
 		return nil, err
 	}
 
-	return val.(*model.UserInfoModel), nil
+	user, ok := val.(*model.UserInfoModel)
+	if !ok {
+		return nil, errors.New("[repo] GetUser type assert error")
+	}
+
+	return user, nil
 }
 
 // BatchGetUser batch get items

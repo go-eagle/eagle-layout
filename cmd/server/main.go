@@ -14,7 +14,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -71,7 +70,7 @@ func main() {
 	go func() {
 		fmt.Printf("Listening and serving PProf HTTP on %s\n", cfg.PprofPort)
 		if err := http.ListenAndServe(cfg.PprofPort, http.DefaultServeMux); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen ListenAndServe for PProf, err: %s", err.Error())
+			panic(fmt.Sprintf("listen ListenAndServe for PProf, err: %+v", err))
 		}
 	}()
 
