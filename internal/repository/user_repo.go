@@ -78,19 +78,13 @@ func (r *userRepo) UpdateUser(ctx context.Context, id int64, data model.UserInfo
 func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserInfoModel, err error) {
 	// get data from local cache
 	err = r.localCache.Get(ctx, cast.ToString(id), &ret)
-	if err != nil {
-		return nil, err
-	}
-	if ret != nil && ret.ID > 0 {
+	if err == nil && ret != nil && ret.ID > 0 {
 		return ret, nil
 	}
 
 	// read redis cache
 	ret, err = r.cache.GetUserCache(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if ret != nil && ret.ID > 0 {
+	if err == nil && ret != nil && ret.ID > 0 {
 		return ret, nil
 	}
 
@@ -175,6 +169,9 @@ func (r *userRepo) BatchGetUsers(ctx context.Context, ids []int64) (ret []*model
 func (r *userRepo) GetUserByUsername(ctx context.Context, username string) (ret *model.UserInfoModel, err error) {
 	ret, err = dao.UserInfoModel.WithContext(ctx).GetUserByUsername(username)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -184,6 +181,9 @@ func (r *userRepo) GetUserByUsername(ctx context.Context, username string) (ret 
 func (r *userRepo) GetUserByEmail(ctx context.Context, email string) (ret *model.UserInfoModel, err error) {
 	ret, err = dao.UserInfoModel.WithContext(ctx).GetUserByEmail(email)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -193,7 +193,10 @@ func (r *userRepo) GetUserByEmail(ctx context.Context, email string) (ret *model
 func (r *userRepo) GetUserByPhone(ctx context.Context, phone string) (ret *model.UserInfoModel, err error) {
 	ret, err = dao.UserInfoModel.WithContext(ctx).GetUserByPhone(phone)
 	if err != nil {
-		return
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	return ret, nil

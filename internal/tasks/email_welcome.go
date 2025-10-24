@@ -55,7 +55,7 @@ func NewEmailWelcomeTask(data EmailWelcomePayload) error {
 		return errors.Wrapf(err, "[tasks] Enqueue task error, name: %s", TypeEmailWelcome)
 	}
 
-	return err
+	return nil
 }
 
 //---------------------------------------------------------------
