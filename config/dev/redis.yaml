@@ -6,6 +6,6 @@ default:
   DialTimeout: 60s
   ReadTimeout: 500ms
   WriteTimeout: 500ms
-  PoolSize: 100
+  PoolSize: 50
   PoolTimeout: 240s
   EnableTrace: true
