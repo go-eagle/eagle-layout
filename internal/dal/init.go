@@ -3,9 +3,11 @@ package dal
 import (
 	"context"
 
-	"github.com/go-eagle/eagle-layout/internal/dal/db/dao"
+	"github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/storage/orm"
 	"gorm.io/gorm"
+
+	"github.com/go-eagle/eagle-layout/internal/dal/db/dao"
 )
 
 var (
@@ -19,8 +21,8 @@ type DBClient struct {
 
 // Init init db
 func Init() (*DBClient, func(), error) {
-	// new gorm logger writer with custom filename for sql
-	// orm.LogWriter = orm.NewLogWriter(log.New(log.WithFilename("mysql")))
+	// new gorm logger writer with custom filename
+	orm.Logger = log.New(log.WithFilename("mysql"))
 
 	// new db
 	// 支持多个数据库，配置在 config/{env}/database.yaml 中

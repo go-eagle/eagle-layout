@@ -4,7 +4,6 @@ default:
   Addr: localhost:3306 # 如果是 docker,可以替换为 对应的服务名称，eg: db:3306
   UserName: root
   Password: 12345678
-  ShowLog: true # 是否打印所有SQL日志
   MaxIdleConn: 10 # 最大闲置的连接数，0意味着使用默认的大小2， 小于0表示不使用连接池
   MaxOpenConn: 60 # 最大打开的连接数, 需要小于数据库配置中的max_connections数
   Timeout: 3s # 数据库连接超时时间, 如果是 PostgreSQL 不需要加入单位
@@ -12,3 +11,7 @@ default:
   WriteTimeout: 3s # 数据库写入超时时间, 0代表不限制，如果是PostgreSQL, 不会使用该字段的值
   ConnMaxLifeTime: 4h # 单个连接最大存活时间，建议设置比数据库超时时长(wait_timeout)稍小一些
   SlowThreshold: 1ms # 慢查询阈值，设置后只打印慢查询日志，默认为200ms
+  LogLevel: info # 日志级别，info, warn, error, silent
+  Colorful: true # 是否彩色打印日志
+  IgnoreRecordNotFoundError: false # 是否忽略 record not found 错误日志
+  EnableTrace: false # 是否开启 SQL 语句跟踪
