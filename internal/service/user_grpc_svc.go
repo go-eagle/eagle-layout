@@ -3,41 +3,36 @@ package service
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/jinzhu/copier"
-	"github.com/spf13/cast"
 	"gorm.io/gorm"
 
 	pb "github.com/go-eagle/eagle-layout/api/user/v1"
-	"github.com/go-eagle/eagle-layout/internal/dal/cache"
-	"github.com/go-eagle/eagle-layout/internal/dal/db/model"
 	"github.com/go-eagle/eagle-layout/internal/ecode"
 	"github.com/go-eagle/eagle-layout/internal/repository"
-	"github.com/go-eagle/eagle-layout/internal/tasks"
 	"github.com/go-eagle/eagle-layout/internal/types"
-	"github.com/go-eagle/eagle/pkg/app"
-	"github.com/go-eagle/eagle/pkg/auth"
 	"github.com/go-eagle/eagle/pkg/errcode"
-	"github.com/go-eagle/eagle/pkg/log"
 )
 
 var (
 	_ pb.UserServiceServer = (*UserServiceServer)(nil)
 )
 
+// UserServiceServer gRPC 服务端
 type UserServiceServer struct {
 	pb.UnimplementedUserServiceServer
 
-	repo repository.UserRepo
+	userSvc *UserService
 }
 
+// NewUserServiceServer 创建 gRPC 服务端
 func NewUserServiceServer(repo repository.UserRepo) *UserServiceServer {
 	return &UserServiceServer{
-		repo: repo,
+		userSvc: NewUserService(repo),
 	}
 }
 
+// Register 注册
 func (s *UserServiceServer) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterReply, error) {
 	err := req.Validate()
 	if err != nil {
@@ -46,219 +41,129 @@ func (s *UserServiceServer) Register(ctx context.Context, req *pb.RegisterReques
 		})).Status(req).Err()
 	}
 
-	var userBase *model.UserInfoModel
-
-	// check user is existed by email
-	userBase, err = s.repo.GetUserByEmail(ctx, req.Email)
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-	if userBase != nil && userBase.ID > 0 {
-		return nil, ecode.ErrUserIsExist.Status(req).Err()
-	}
-
-	// check user is existed by username
-	userBase, err = s.repo.GetUserByUsername(ctx, req.Username)
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-	if userBase != nil && userBase.ID > 0 {
-		return nil, ecode.ErrUserIsExist.Status(req).Err()
-	}
-
-	// gen a hash password
-	pwd, err := auth.HashAndSalt(req.Password)
-	if err != nil {
-		return nil, errcode.ErrEncrypt
-	}
-
-	// create a new user
-	user, err := newUser(req.Username, req.Email, pwd)
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-	uid, err := s.repo.CreateUser(ctx, user)
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-
-	// send welcome email
-	err = tasks.NewEmailWelcomeTask(tasks.EmailWelcomePayload{UserID: uid})
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-
-	return &pb.RegisterReply{
-		Id:       uid,
+	// 协议转换：pb.RegisterRequest → types.RegisterInput
+	input := types.RegisterInput{
 		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	// 调用业务逻辑
+	result, err := s.userSvc.Register(ctx, input)
+	if err != nil {
+		return nil, s.convertToGrpcError(err)
+	}
+
+	// 协议转换：types.RegisterOutput → pb.RegisterReply
+	return &pb.RegisterReply{
+		Id:       result.ID,
+		Username: result.Username,
 	}, nil
 }
 
-func newUser(username, email, password string) (model.UserInfoModel, error) {
-	return model.UserInfoModel{
-		Username:  username,
-		Email:     email,
-		Password:  password,
-		Status:    int32(pb.StatusType_NORMAL),
-		CreatedAt: time.Now().Unix(),
-	}, nil
-}
-
+// Login 登录
 func (s *UserServiceServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginReply, error) {
 	if len(req.Email) == 0 && len(req.Username) == 0 {
 		return nil, ecode.ErrInvalidArgument.Status(req).Err()
 	}
 
-	// get user base info
-	var (
-		user *model.UserInfoModel
-		err  error
-	)
-
-	// try to get user by email first
-	if req.Email != "" {
-		user, err = s.repo.GetUserByEmail(ctx, req.Email)
-		if err != nil {
-			return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-				"msg": err.Error(),
-			})).Status(req).Err()
-		}
+	// 协议转换
+	input := types.LoginInput{
+		Email:    req.Email,
+		Username: req.Username,
+		Password: req.Password,
 	}
 
-	// if not found by email, try username
-	if user == nil && len(req.Username) > 0 {
-		user, err = s.repo.GetUserByUsername(ctx, req.Username)
-		if err != nil {
-			return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-				"msg": err.Error(),
-			})).Status(req).Err()
-		}
-	}
-
-	// user not found, return password incorrect error (security best practice)
-	if user == nil || user.ID == 0 {
-		return nil, ecode.ErrPasswordIncorrect.Status(req).Err()
-	}
-
-	if !auth.ComparePasswords(user.Password, req.Password) {
-		return nil, ecode.ErrPasswordIncorrect.Status(req).Err()
-	}
-
-	// Sign the json web token.
-	payload := map[string]interface{}{"user_id": user.ID, "username": user.Username}
-	token, err := app.Sign(ctx, payload, app.Conf.JwtSecret, int64(cache.UserTokenExpireTime))
+	// 调用业务逻辑
+	result, err := s.userSvc.Login(ctx, input)
 	if err != nil {
-		return nil, ecode.ErrToken.Status(req).Err()
-	}
-
-	// record token to redis
-	err = cache.NewUserTokenCache().SetUserTokenCache(ctx, user.ID, token, cache.UserTokenExpireTime)
-	if err != nil {
-		return nil, ecode.ErrToken.Status(req).Err()
+		return nil, s.convertToGrpcError(err)
 	}
 
 	return &pb.LoginReply{
-		Id:          user.ID,
-		AccessToken: token,
+		Id:          result.ID,
+		AccessToken: result.AccessToken,
 	}, nil
 }
 
+// Logout 登出
 func (s *UserServiceServer) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutReply, error) {
-	c := cache.NewUserTokenCache()
-	// check token
-	token, err := c.GetUserTokenCache(ctx, req.Id)
-	if err != nil {
-		return nil, ecode.ErrToken.Status(req).Err()
-	}
-	if token != req.AccessToken {
-		return nil, ecode.ErrAccessDenied.Status(req).Err()
+	// 协议转换
+	input := types.LogoutInput{
+		ID:          req.Id,
+		AccessToken: req.AccessToken,
 	}
 
-	// delete token from cache
-	err = c.DelUserTokenCache(ctx, req.GetId())
+	// 调用业务逻辑
+	_, err := s.userSvc.Logout(ctx, input)
 	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
+		return nil, s.convertToGrpcError(err)
 	}
 
 	return &pb.LogoutReply{}, nil
 }
 
+// CreateUser 创建用户
 func (s *UserServiceServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserReply, error) {
-	// gen a hash password
-	pwd, err := auth.HashAndSalt(req.Password)
-	if err != nil {
-		return nil, errcode.ErrEncrypt
+	// 协议转换
+	input := types.CreateUserInput{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
 	}
 
-	// create a new user
-	user, err := newUser(req.Username, req.Email, pwd)
+	// 调用业务逻辑
+	result, err := s.userSvc.CreateUser(ctx, input)
 	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-	id, err := s.repo.CreateUser(ctx, user)
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
+		return nil, s.convertToGrpcError(err)
 	}
 
 	return &pb.CreateUserReply{
-		Id:       id,
-		Username: req.Username,
+		Id:       result.ID,
+		Username: result.Username,
 	}, nil
 }
 
+// UpdateUser 更新用户
 func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserReply, error) {
 	if req.UserId == 0 {
 		return nil, ecode.ErrInvalidArgument.Status(req).Err()
 	}
 
-	user := model.UserInfoModel{
+	// 协议转换
+	input := types.UpdateUserInput{
+		UserId:   req.UserId,
 		Nickname: req.Nickname,
-		//Phone:     req.Phone,
-		Email:  req.Email,
-		Avatar: req.Avatar,
-		//Gender:    cast.ToString(req.Gender),
-		Birthday:  req.Birthday,
-		Bio:       req.Bio,
-		Status:    cast.ToInt32(req.Status),
-		UpdatedAt: time.Now().Unix(),
+		Phone:    req.Phone,
+		Email:    req.Email,
+		Avatar:   req.Avatar,
+		Gender:   req.Gender,
+		Birthday: req.Birthday,
+		Bio:      req.Bio,
+		Status:   req.Status,
 	}
-	err := s.repo.UpdateUser(ctx, req.UserId, user)
+
+	// 调用业务逻辑
+	result, err := s.userSvc.UpdateUser(ctx, input)
 	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
+		return nil, s.convertToGrpcError(err)
 	}
 
 	return &pb.UpdateUserReply{
-		UserId:    req.UserId,
-		Nickname:  req.Nickname,
-		Phone:     req.Phone,
-		Email:     req.Email,
-		Avatar:    req.Avatar,
-		Gender:    req.Gender,
-		Birthday:  req.Birthday,
-		Bio:       req.Bio,
-		Status:    req.Status,
-		UpdatedAt: time.Now().Unix(),
+		UserId:    result.UserId,
+		Nickname:  result.Nickname,
+		Phone:     result.Phone,
+		Email:     result.Email,
+		Avatar:    result.Avatar,
+		Gender:    result.Gender,
+		Birthday:  result.Birthday,
+		Bio:       result.Bio,
+		Status:    result.Status,
+		UpdatedAt: result.UpdatedAt,
 	}, nil
 }
 
+// UpdatePassword 更新密码
 func (s *UserServiceServer) UpdatePassword(ctx context.Context, req *pb.UpdatePasswordRequest) (*pb.UpdatePasswordReply, error) {
 	if len(req.Id) == 0 {
 		return nil, ecode.ErrInvalidArgument.Status(req).Err()
@@ -270,69 +175,44 @@ func (s *UserServiceServer) UpdatePassword(ctx context.Context, req *pb.UpdatePa
 		return nil, ecode.ErrTwicePasswordNotMatch.Status(req).Err()
 	}
 
-	// get user base info
-	var (
-		user *model.UserInfoModel
-		err  error
-	)
-	user, err = s.repo.GetUser(ctx, cast.ToInt64(req.Id))
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-	if user == nil || user.ID == 0 {
-		return nil, ecode.ErrUserNotFound.Status(req).Err()
+	// 协议转换
+	input := types.UpdatePasswordInput{
+		ID:              req.Id,
+		Password:        req.Password,
+		NewPassword:     req.NewPassword,
+		ConfirmPassword: req.ConfirmPassword,
 	}
 
-	if !auth.ComparePasswords(user.Password, req.Password) {
-		return nil, ecode.ErrPasswordIncorrect.Status(req).Err()
-	}
-
-	newPwd, err := auth.HashAndSalt(req.NewPassword)
+	// 调用业务逻辑
+	_, err := s.userSvc.UpdatePassword(ctx, input)
 	if err != nil {
-		return nil, ecode.ErrEncrypt.Status(req).Err()
-	}
-
-	data := model.UserInfoModel{
-		Password:  newPwd,
-		UpdatedAt: time.Now().Unix(),
-	}
-	err = s.repo.UpdateUser(ctx, user.ID, data)
-	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
+		return nil, s.convertToGrpcError(err)
 	}
 
 	return &pb.UpdatePasswordReply{}, nil
 }
 
+// GetUser 获取用户
 func (s *UserServiceServer) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserReply, error) {
-	user, err := s.repo.GetUser(ctx, req.Id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ecode.ErrUserNotFound.Status(req).Err()
-		}
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
+	// 协议转换
+	input := types.GetUserInput{
+		ID: req.Id,
 	}
 
-	u, err := convertUser(user)
+	// 调用业务逻辑
+	result, err := s.userSvc.GetUser(ctx, input)
 	if err != nil {
-		return nil, ecode.ErrInternalError.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
+		return nil, s.convertToGrpcError(err)
 	}
 
 	return &pb.GetUserReply{
-		User: u,
+		User: s.convertUser(result.User),
 	}, nil
 }
 
+// BatchGetUsers 批量获取用户
 func (s *UserServiceServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetUsersRequest) (*pb.BatchGetUsersReply, error) {
-	// check rpc request if canceled
+	// 检查 RPC 请求是否取消
 	if ctx.Err() == context.Canceled {
 		return nil, ecode.ErrCanceled.Status(req).Err()
 	}
@@ -340,66 +220,46 @@ func (s *UserServiceServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetU
 	if len(req.GetIds()) == 0 {
 		return nil, errors.New("ids is empty")
 	}
-	var (
-		ids   []int64
-		users []*pb.User
-	)
-	ids = req.GetIds()
 
-	// user base
-	userBases, err := s.repo.BatchGetUsers(ctx, ids)
+	// 协议转换
+	input := types.BatchGetUsersInput{
+		IDs: req.GetIds(),
+	}
+
+	// 调用业务逻辑
+	result, err := s.userSvc.BatchGetUsers(ctx, input)
 	if err != nil {
-		return nil, ecode.ErrInternalError.Status(req).Err()
-	}
-	userMap := make(map[int64]*model.UserInfoModel, 0)
-	for _, val := range userBases {
-		userMap[val.ID] = val
+		return nil, s.convertToGrpcError(err)
 	}
 
-	// compose data
-	for _, id := range ids {
-		user, ok := userMap[id]
-		if !ok {
-			continue
-		}
-		u, err := convertUser(user)
-		if err != nil {
-			log.Errorf("[BatchGetUsers] convertUser error: %v", err)
-			continue
-		}
-		users = append(users, u)
+	// 转换为 pb.User 列表
+	var pbUsers []*pb.User
+	for _, user := range result.Users {
+		pbUsers = append(pbUsers, s.convertUser(user))
 	}
 
 	return &pb.BatchGetUsersReply{
-		Users: users,
+		Users: pbUsers,
 	}, nil
 }
 
-func convertUser(u *model.UserInfoModel) (*pb.User, error) {
-	if u == nil {
-		return nil, nil
-	}
-	user := &types.User{
-		Id:        u.ID,
-		Username:  u.Username,
-		Phone:     u.Phone,
-		Email:     u.Email,
-		LoginAt:   u.LoginAt,
-		Status:    u.Status,
-		Nickname:  u.Nickname,
-		Avatar:    u.Avatar,
-		Gender:    u.Gender,
-		Birthday:  u.Birthday,
-		Bio:       u.Bio,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+// convertToGrpcError 转换错误为 gRPC 错误
+func (s *UserServiceServer) convertToGrpcError(err error) error {
+	// 检查是否是 gorm.ErrRecordNotFound
+	if err == gorm.ErrRecordNotFound {
+		return ecode.ErrUserNotFound.Status(nil).Err()
 	}
 
-	// copy to pb.user
-	pbUser := &pb.User{}
-	err := copier.Copy(pbUser, &user)
-	if err != nil {
-		return nil, err
+	// 其他错误直接返回，业务逻辑层已经处理过
+	return err
+}
+
+// convertUser 转换用户模型
+func (s *UserServiceServer) convertUser(u *types.User) *pb.User {
+	if u == nil {
+		return nil
 	}
-	return pbUser, nil
+	pbUser := &pb.User{}
+	_ = copier.Copy(pbUser, u)
+	return pbUser
 }
