@@ -2,16 +2,17 @@ package service
 
 import (
 	"context"
-	"errors"
+	"strconv"
 
 	"github.com/jinzhu/copier"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 
 	pb "github.com/go-eagle/eagle-layout/api/user/v1"
 	"github.com/go-eagle/eagle-layout/internal/ecode"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/types"
-	"github.com/go-eagle/eagle/pkg/errcode"
 )
 
 var (
@@ -34,13 +35,6 @@ func NewUserServiceServer(repo repository.UserRepo) *UserServiceServer {
 
 // Register 注册
 func (s *UserServiceServer) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterReply, error) {
-	err := req.Validate()
-	if err != nil {
-		return nil, ecode.ErrInvalidArgument.WithDetails(errcode.NewDetails(map[string]interface{}{
-			"msg": err.Error(),
-		})).Status(req).Err()
-	}
-
 	// 协议转换：pb.RegisterRequest → types.RegisterInput
 	input := types.RegisterInput{
 		Username: req.Username,
@@ -63,10 +57,6 @@ func (s *UserServiceServer) Register(ctx context.Context, req *pb.RegisterReques
 
 // Login 登录
 func (s *UserServiceServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginReply, error) {
-	if len(req.Email) == 0 && len(req.Username) == 0 {
-		return nil, ecode.ErrInvalidArgument.Status(req).Err()
-	}
-
 	// 协议转换
 	input := types.LoginInput{
 		Email:    req.Email,
@@ -126,10 +116,6 @@ func (s *UserServiceServer) CreateUser(ctx context.Context, req *pb.CreateUserRe
 
 // UpdateUser 更新用户
 func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserReply, error) {
-	if req.UserId == 0 {
-		return nil, ecode.ErrInvalidArgument.Status(req).Err()
-	}
-
 	// 协议转换
 	input := types.UpdateUserInput{
 		UserId:   req.UserId,
@@ -137,10 +123,10 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRe
 		Phone:    req.Phone,
 		Email:    req.Email,
 		Avatar:   req.Avatar,
-		Gender:   req.Gender,
+		Gender:   int32(req.Gender),
 		Birthday: req.Birthday,
 		Bio:      req.Bio,
-		Status:   req.Status,
+		Status:   int32(req.Status),
 	}
 
 	// 调用业务逻辑
@@ -155,36 +141,31 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRe
 		Phone:     result.Phone,
 		Email:     result.Email,
 		Avatar:    result.Avatar,
-		Gender:    result.Gender,
+		Gender:    pb.GenderType(result.Gender),
 		Birthday:  result.Birthday,
 		Bio:       result.Bio,
-		Status:    result.Status,
+		Status:    pb.StatusType(result.Status),
 		UpdatedAt: result.UpdatedAt,
 	}, nil
 }
 
 // UpdatePassword 更新密码
 func (s *UserServiceServer) UpdatePassword(ctx context.Context, req *pb.UpdatePasswordRequest) (*pb.UpdatePasswordReply, error) {
-	if len(req.Id) == 0 {
-		return nil, ecode.ErrInvalidArgument.Status(req).Err()
-	}
-	if len(req.Password) == 0 || len(req.NewPassword) == 0 || len(req.ConfirmPassword) == 0 {
-		return nil, ecode.ErrInvalidArgument.Status(req).Err()
-	}
-	if req.NewPassword != req.ConfirmPassword {
-		return nil, ecode.ErrTwicePasswordNotMatch.Status(req).Err()
+	// 协议转换：string ID -> int64 ID
+	id, err := strconv.ParseInt(req.Id, 10, 64)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid id format")
 	}
 
-	// 协议转换
 	input := types.UpdatePasswordInput{
-		ID:              req.Id,
+		ID:              id,
 		Password:        req.Password,
 		NewPassword:     req.NewPassword,
 		ConfirmPassword: req.ConfirmPassword,
 	}
 
 	// 调用业务逻辑
-	_, err := s.userSvc.UpdatePassword(ctx, input)
+	_, err = s.userSvc.UpdatePassword(ctx, input)
 	if err != nil {
 		return nil, s.convertToGrpcError(err)
 	}
@@ -212,13 +193,9 @@ func (s *UserServiceServer) GetUser(ctx context.Context, req *pb.GetUserRequest)
 
 // BatchGetUsers 批量获取用户
 func (s *UserServiceServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetUsersRequest) (*pb.BatchGetUsersReply, error) {
-	// 检查 RPC 请求是否取消
+	// 检查 RPC 请求是否取消（gRPC 特定处理）
 	if ctx.Err() == context.Canceled {
-		return nil, ecode.ErrCanceled.Status(req).Err()
-	}
-
-	if len(req.GetIds()) == 0 {
-		return nil, errors.New("ids is empty")
+		return nil, status.Error(codes.Canceled, "request canceled")
 	}
 
 	// 协议转换
@@ -247,11 +224,27 @@ func (s *UserServiceServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetU
 func (s *UserServiceServer) convertToGrpcError(err error) error {
 	// 检查是否是 gorm.ErrRecordNotFound
 	if err == gorm.ErrRecordNotFound {
-		return ecode.ErrUserNotFound.Status(nil).Err()
+		return status.Errorf(codes.NotFound, "user not found")
 	}
 
-	// 其他错误直接返回，业务逻辑层已经处理过
-	return err
+	// 将业务错误映射为 gRPC 状态码
+	switch err {
+	case ecode.ErrUserIsExist:
+		return status.Errorf(codes.AlreadyExists, err.Error())
+	case ecode.ErrUserNotFound:
+		return status.Errorf(codes.NotFound, err.Error())
+	case ecode.ErrPasswordIncorrect:
+		return status.Errorf(codes.Unauthenticated, err.Error())
+	case ecode.ErrToken:
+		return status.Errorf(codes.Unauthenticated, err.Error())
+	case ecode.ErrAccessDenied:
+		return status.Errorf(codes.PermissionDenied, err.Error())
+	case ecode.ErrInternalError, ecode.ErrEncrypt:
+		return status.Errorf(codes.Internal, err.Error())
+	}
+
+	// 其他未知错误，包装为 Internal 错误
+	return status.Errorf(codes.Internal, "internal error: %v", err)
 }
 
 // convertUser 转换用户模型
