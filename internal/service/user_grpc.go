@@ -7,10 +7,8 @@ import (
 	"github.com/jinzhu/copier"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"gorm.io/gorm"
 
 	pb "github.com/go-eagle/eagle-layout/api/user/v1"
-	"github.com/go-eagle/eagle-layout/internal/ecode"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/types"
 )
@@ -45,7 +43,7 @@ func (s *UserServiceServer) Register(ctx context.Context, req *pb.RegisterReques
 	// 调用业务逻辑
 	result, err := s.userSvc.Register(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	// 协议转换：types.RegisterOutput → pb.RegisterReply
@@ -67,7 +65,7 @@ func (s *UserServiceServer) Login(ctx context.Context, req *pb.LoginRequest) (*p
 	// 调用业务逻辑
 	result, err := s.userSvc.Login(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	return &pb.LoginReply{
@@ -87,7 +85,7 @@ func (s *UserServiceServer) Logout(ctx context.Context, req *pb.LogoutRequest) (
 	// 调用业务逻辑
 	_, err := s.userSvc.Logout(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	return &pb.LogoutReply{}, nil
@@ -105,7 +103,7 @@ func (s *UserServiceServer) CreateUser(ctx context.Context, req *pb.CreateUserRe
 	// 调用业务逻辑
 	result, err := s.userSvc.CreateUser(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	return &pb.CreateUserReply{
@@ -132,7 +130,7 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRe
 	// 调用业务逻辑
 	result, err := s.userSvc.UpdateUser(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	return &pb.UpdateUserReply{
@@ -167,7 +165,7 @@ func (s *UserServiceServer) UpdatePassword(ctx context.Context, req *pb.UpdatePa
 	// 调用业务逻辑
 	_, err = s.userSvc.UpdatePassword(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	return &pb.UpdatePasswordReply{}, nil
@@ -183,7 +181,7 @@ func (s *UserServiceServer) GetUser(ctx context.Context, req *pb.GetUserRequest)
 	// 调用业务逻辑
 	result, err := s.userSvc.GetUser(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	return &pb.GetUserReply{
@@ -206,7 +204,7 @@ func (s *UserServiceServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetU
 	// 调用业务逻辑
 	result, err := s.userSvc.BatchGetUsers(ctx, input)
 	if err != nil {
-		return nil, s.convertToGrpcError(err)
+		return nil, convertToGrpcError(err)
 	}
 
 	// 转换为 pb.User 列表
@@ -218,33 +216,6 @@ func (s *UserServiceServer) BatchGetUsers(ctx context.Context, req *pb.BatchGetU
 	return &pb.BatchGetUsersReply{
 		Users: pbUsers,
 	}, nil
-}
-
-// convertToGrpcError 转换错误为 gRPC 错误
-func (s *UserServiceServer) convertToGrpcError(err error) error {
-	// 检查是否是 gorm.ErrRecordNotFound
-	if err == gorm.ErrRecordNotFound {
-		return status.Errorf(codes.NotFound, "user not found")
-	}
-
-	// 将业务错误映射为 gRPC 状态码
-	switch err {
-	case ecode.ErrUserIsExist:
-		return status.Errorf(codes.AlreadyExists, err.Error())
-	case ecode.ErrUserNotFound:
-		return status.Errorf(codes.NotFound, err.Error())
-	case ecode.ErrPasswordIncorrect:
-		return status.Errorf(codes.Unauthenticated, err.Error())
-	case ecode.ErrToken:
-		return status.Errorf(codes.Unauthenticated, err.Error())
-	case ecode.ErrAccessDenied:
-		return status.Errorf(codes.PermissionDenied, err.Error())
-	case ecode.ErrInternalError, ecode.ErrEncrypt:
-		return status.Errorf(codes.Internal, err.Error())
-	}
-
-	// 其他未知错误，包装为 Internal 错误
-	return status.Errorf(codes.Internal, "internal error: %v", err)
 }
 
 // convertUser 转换用户模型

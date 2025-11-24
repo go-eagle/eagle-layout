@@ -4,16 +4,36 @@ import (
 	"github.com/go-eagle/eagle/pkg/errcode"
 )
 
+// ============================================
+// Eagle 框架标准错误码（统一通过 ecode 包使用）
+// ============================================
+
 // nolint: golint
 var (
-	// common errors
-	ErrInternalError   = errcode.NewError(10000, "Internal error")
-	ErrInvalidArgument = errcode.NewError(10001, "Invalid argument")
-	ErrNotFound        = errcode.NewError(10003, "Not found")
-	ErrAccessDenied    = errcode.NewError(10006, "Access denied")
-	// ErrCanceled        = errcode.NewError(codes.Canceled, "RPC request is canceled")
+	// 通用错误
+	// Common errors
+	ErrInternalServer     = errcode.ErrInternalServer
+	ErrInvalidArgument    = errcode.ErrInvalidParam
+	ErrUnauthorized       = errcode.ErrUnauthorized
+	ErrNotFound           = errcode.ErrNotFound
+	ErrUnknown            = errcode.ErrUnknown
+	ErrDeadlineExceeded   = errcode.ErrDeadlineExceeded
+	ErrAccessDenied       = errcode.ErrAccessDenied
+	ErrLimitExceed        = errcode.ErrLimitExceed
+	ErrMethodNotAllowed   = errcode.ErrMethodNotAllowed
+	ErrSignParam          = errcode.ErrSignParam
+	ErrValidation         = errcode.ErrValidation
+	ErrDatabase           = errcode.ErrDatabase
+	ErrToken              = errcode.ErrToken
+	ErrInvalidToken       = errcode.ErrInvalidToken
+	ErrTokenTimeout       = errcode.ErrTokenTimeout
+	ErrTooManyRequests    = errcode.ErrTooManyRequests
+	ErrInvalidTransaction = errcode.ErrInvalidTransaction
+	ErrEncrypt            = errcode.ErrEncrypt
+	ErrServiceUnavailable = errcode.ErrServiceUnavailable
 
-	// user grpc errors
+	// user 业务错误码（项目特定）
+	// User business errors (project-specific)
 	ErrUserIsExist           = errcode.NewError(20100, "The user already exists.")
 	ErrUserNotFound          = errcode.NewError(20101, "The user was not found.")
 	ErrPasswordIncorrect     = errcode.NewError(20102, "账号或密码错误")
@@ -26,6 +46,5 @@ var (
 	ErrEmailOrPassword       = errcode.NewError(20109, "邮箱或密码错误")
 	ErrTwicePasswordNotMatch = errcode.NewError(20110, "两次密码输入不一致")
 	ErrRegisterFailed        = errcode.NewError(20111, "注册失败")
-	ErrToken                 = errcode.NewError(20112, "Gen token error")
-	ErrEncrypt               = errcode.NewError(20113, "Encrypting the user password error")
+	ErrInternalError         = errcode.ErrInternalServer
 )

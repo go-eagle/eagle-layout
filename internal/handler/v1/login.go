@@ -3,17 +3,18 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-eagle/eagle-layout/internal/service"
+	"github.com/go-eagle/eagle-layout/internal/types"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/errcode"
 )
 
 // LoginHandler 包含 UserService
 type LoginHandler struct {
-	UserService service.UserService
+	UserService *service.UserService
 }
 
 // NewLoginHandler 创建一个新的 LoginHandler
-func NewLoginHandler(userService service.UserService) *LoginHandler {
+func NewLoginHandler(userService *service.UserService) *LoginHandler {
 	return &LoginHandler{UserService: userService}
 }
 
@@ -27,6 +28,7 @@ func NewLoginHandler(userService service.UserService) *LoginHandler {
 func (h *LoginHandler) LoginHandler(c *gin.Context) {
 	// 从请求中提取参数（例如 JSON 或表单参数）
 	var loginRequest struct {
+		Email    string `json:"email"`
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
@@ -37,7 +39,12 @@ func (h *LoginHandler) LoginHandler(c *gin.Context) {
 	}
 
 	// 调用 UserService 的逻辑
-	user, err := h.UserService.Login(c.Request.Context(), loginRequest.Username, loginRequest.Password)
+	input := types.LoginInput{
+		Email:    loginRequest.Email,
+		Username: loginRequest.Username,
+		Password: loginRequest.Password,
+	}
+	user, err := h.UserService.Login(c.Request.Context(), input)
 	if err != nil {
 		app.Error(c, errcode.ErrUnauthorized.WithDetails(err.Error()))
 		return

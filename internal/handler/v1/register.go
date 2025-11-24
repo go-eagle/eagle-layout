@@ -3,17 +3,18 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-eagle/eagle-layout/internal/service"
+	"github.com/go-eagle/eagle-layout/internal/types"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/errcode"
 )
 
 // RegisterHandler 包含 UserService
 type RegisterHandler struct {
-	UserService service.UserService
+	UserService *service.UserService
 }
 
 // NewRegisterHandler 创建一个新的 RegisterHandler
-func NewRegisterHandler(userService service.UserService) *RegisterHandler {
+func NewRegisterHandler(userService *service.UserService) *RegisterHandler {
 	return &RegisterHandler{UserService: userService}
 }
 
@@ -37,7 +38,11 @@ func (h *RegisterHandler) RegisterHandler(c *gin.Context) {
 	}
 
 	// 调用 UserService 的逻辑
-	user, err := h.UserService.Register(c.Request.Context(), RegisterRequest.Username, RegisterRequest.Password)
+	input := types.RegisterInput{
+		Username: RegisterRequest.Username,
+		Password: RegisterRequest.Password,
+	}
+	user, err := h.UserService.Register(c.Request.Context(), input)
 	if err != nil {
 		app.Error(c, errcode.ErrUnauthorized.WithDetails(err.Error()))
 		return
