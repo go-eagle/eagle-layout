@@ -71,6 +71,7 @@ func (r *userRepo) UpdateUser(ctx context.Context, id int64, data model.UserInfo
 	}
 	// delete cache
 	_ = r.cache.DelUserCache(ctx, id)
+	_ = r.localCache.Del(ctx, cast.ToString(id))
 	return nil
 }
 
