@@ -1,0 +1,1374 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ins-api
+    description: Description from annotation
+    contact:
+        name: Contact Name
+        url: https://github.com/go-microservice/chatgram
+    license:
+        name: MIT License
+        url: https://github.com/go-microservice/chatgram/blob/main/LICENSE
+    version: v1.0.0
+servers:
+    - url: http://localhost:8081
+      description: 本地环境
+    - url: http://localhost:8081
+      description: 测试环境
+    - url: http://ins-api.cool.io
+      description: 线上环境
+paths:
+    /v1/auth/login:
+        post:
+            tags:
+                - UserService
+            description: 登录
+            operationId: UserService_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoginReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/auth/logout:
+        post:
+            tags:
+                - UserService
+            description: 退出
+            operationId: UserService_Logout
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LogoutRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LogoutReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/auth/register:
+        post:
+            tags:
+                - UserService
+            description: |-
+                auth
+                 注册
+            operationId: UserService_Register
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RegisterRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RegisterReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/comments:
+        post:
+            tags:
+                - CommentService
+            description: 创建评论
+            operationId: CommentService_CreateComment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateCommentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateCommentReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - CommentService
+            description: 删除评论
+            operationId: CommentService_DeleteComment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DeleteCommentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DeleteCommentReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/comments/dislike:
+        post:
+            tags:
+                - LikeService
+            operationId: LikeService_DeleteCommentLike
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DeleteCommentLikeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DeleteCommentLikeReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/comments/hot:
+        get:
+            tags:
+                - CommentService
+            description: |-
+                查看评论
+                	rpc GetComment (GetCommentRequest) returns (GetCommentReply) {
+                		option (google.api.http) = {
+                			get: "/v1/comments/{id}"
+                		};
+                	};
+                 热门评论列表
+            operationId: CommentService_ListHotComment
+            parameters:
+                - name: lastId
+                  in: query
+                  description: 分页id
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: postId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListCommentReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/comments/latest:
+        get:
+            tags:
+                - CommentService
+            description: 最新评论列表
+            operationId: CommentService_ListLatestComment
+            parameters:
+                - name: lastId
+                  in: query
+                  description: 分页id
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: postId
+                  in: query
+                  schema:
+                    type: string
+                - name: post_id
+                  in: query
+                  description: 帖子id
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListCommentReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/comments/like:
+        post:
+            tags:
+                - LikeService
+            operationId: LikeService_CreateCommentLike
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateCommentLikeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateCommentLikeReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/comments/likes:
+        get:
+            tags:
+                - LikeService
+            operationId: LikeService_ListCommentLike
+            parameters:
+                - name: commentId
+                  in: query
+                  schema:
+                    type: string
+                - name: lastId
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListCommentLikeReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/comments/reply:
+        get:
+            tags:
+                - CommentService
+            description: 回复列表
+            operationId: CommentService_ListReply
+            parameters:
+                - name: lastId
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: commentId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListReplyReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - CommentService
+            description: 回复评论
+            operationId: CommentService_ReplyComment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ReplyCommentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ReplyCommentReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/posts:
+        post:
+            tags:
+                - PostService
+            operationId: PostService_CreatePost
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreatePostRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreatePostReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - PostService
+            operationId: PostService_DeletePost
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DeletePostRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DeletePostReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        patch:
+            tags:
+                - PostService
+            operationId: PostService_UpdatePost
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdatePostRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpdatePostReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/posts/dislike:
+        post:
+            tags:
+                - LikeService
+            operationId: LikeService_DeletePostLike
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DeletePostLikeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DeletePostLikeReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/posts/hot:
+        get:
+            tags:
+                - PostService
+            operationId: PostService_ListHotPost
+            parameters:
+                - name: lastId
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListPostReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/posts/latest:
+        get:
+            tags:
+                - PostService
+            operationId: PostService_ListLatestPost
+            parameters:
+                - name: lastId
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListPostReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/posts/like:
+        post:
+            tags:
+                - LikeService
+            operationId: LikeService_CreatePostLike
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreatePostLikeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreatePostLikeReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/posts/likes:
+        get:
+            tags:
+                - LikeService
+            operationId: LikeService_ListPostLike
+            parameters:
+                - name: postId
+                  in: query
+                  schema:
+                    type: string
+                - name: lastId
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListPostLikeReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/posts/{id}:
+        get:
+            tags:
+                - PostService
+            operationId: PostService_GetPost
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetPostReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/relation/follow:
+        post:
+            tags:
+                - RelationService
+            operationId: RelationService_Follow
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/FollowRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/FollowReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/relation/follower:
+        get:
+            tags:
+                - RelationService
+            operationId: RelationService_GetFollowerUserList
+            parameters:
+                - name: userId
+                  in: query
+                  schema:
+                    type: string
+                - name: lastId
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetFollowerUserListReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/relation/following:
+        get:
+            tags:
+                - RelationService
+            operationId: RelationService_GetFollowingUserList
+            parameters:
+                - name: id
+                  in: query
+                  schema:
+                    type: string
+                - name: lastId
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetFollowingUserListReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/relation/unfollow:
+        post:
+            tags:
+                - RelationService
+            operationId: RelationService_Unfollow
+            parameters:
+                - name: userId
+                  in: query
+                  description: 被取消关注人uid
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UnfollowReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/users/password/{id}:
+        patch:
+            tags:
+                - UserService
+            description: 修改用户密码
+            operationId: UserService_UpdatePassword
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdatePasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpdatePasswordReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/users/{id}:
+        get:
+            tags:
+                - UserService
+            description: 获取用户信息
+            operationId: UserService_GetUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetUserReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        put:
+            tags:
+                - UserService
+            description: 更新用户信息
+            operationId: UserService_UpdateUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpdateUserReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+components:
+    schemas:
+        Comment:
+            type: object
+            properties:
+                id:
+                    type: string
+                    description: 评论id
+                postId:
+                    type: string
+                    description: 帖子id
+                user:
+                    allOf:
+                        - $ref: '#/components/schemas/User'
+                    description: 用户信息
+                content:
+                    type: string
+                    description: 评论内容
+                rootId:
+                    type: string
+                    description: 根评论id
+                parentId:
+                    type: string
+                    description: 父评论id
+                likeCount:
+                    type: integer
+                    description: 点赞数
+                    format: int32
+                replyCount:
+                    type: integer
+                    description: 回复数
+                    format: int32
+                score:
+                    type: string
+                    description: 分数
+                delFlag:
+                    type: integer
+                    description: 删除标记
+                    format: int32
+                createdAt:
+                    type: string
+                    description: 创建时间
+                updatedAt:
+                    type: string
+                    description: 更新时间
+                deviceType:
+                    type: string
+                    description: 设备类型 iOS/Android
+                ip:
+                    type: string
+                    description: 用户id
+            description: 评论结构
+        Content:
+            type: object
+            properties:
+                text:
+                    type: string
+                images:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/PostImage'
+                video:
+                    $ref: '#/components/schemas/Video'
+        CreateCommentLikeReply:
+            type: object
+            properties: {}
+        CreateCommentLikeRequest:
+            type: object
+            properties:
+                userId:
+                    type: string
+                commentId:
+                    type: string
+        CreateCommentReply:
+            type: object
+            properties:
+                comment:
+                    $ref: '#/components/schemas/Comment'
+        CreateCommentRequest:
+            type: object
+            properties:
+                postId:
+                    type: string
+                    description: 帖子id
+                userId:
+                    type: string
+                    description: 发布评论的uid
+                content:
+                    type: string
+                    description: 评论的具体内容
+                rootId:
+                    type: string
+                    description: 评论的根id
+                parentId:
+                    type: string
+                    description: 评论的上一级id
+                deviceType:
+                    type: string
+                    description: 设备类型，比如iOS, Android
+                ip:
+                    type: string
+                    description: 评论人的ip地址
+        CreatePostLikeReply:
+            type: object
+            properties: {}
+        CreatePostLikeRequest:
+            type: object
+            properties:
+                userId:
+                    type: string
+                postId:
+                    type: string
+        CreatePostReply:
+            type: object
+            properties:
+                post:
+                    $ref: '#/components/schemas/Post'
+        CreatePostRequest:
+            type: object
+            properties:
+                userId:
+                    type: string
+                title:
+                    type: string
+                text:
+                    type: string
+                images:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/PostImageRequest'
+                    description: json格式：[{"image_key":"/abc/a.jpg","image_type":"jpg","width":200,"height":200}]
+                videoKey:
+                    type: string
+                videoDuration:
+                    type: number
+                    format: float
+                coverKey:
+                    type: string
+                coverWidth:
+                    type: integer
+                    format: int32
+                coverHeight:
+                    type: integer
+                    format: int32
+                longitude:
+                    type: number
+                    format: float
+                latitude:
+                    type: number
+                    format: float
+                position:
+                    type: string
+        DeleteCommentLikeReply:
+            type: object
+            properties: {}
+        DeleteCommentLikeRequest:
+            type: object
+            properties:
+                userId:
+                    type: string
+                commentId:
+                    type: string
+        DeleteCommentReply:
+            type: object
+            properties: {}
+        DeleteCommentRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                delFlag:
+                    type: integer
+                    format: int32
+        DeletePostLikeReply:
+            type: object
+            properties: {}
+        DeletePostLikeRequest:
+            type: object
+            properties:
+                userId:
+                    type: string
+                postId:
+                    type: string
+        DeletePostReply:
+            type: object
+            properties: {}
+        DeletePostRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                delFlag:
+                    type: integer
+                    format: int32
+        FollowReply:
+            type: object
+            properties: {}
+        FollowRequest:
+            type: object
+            properties:
+                userId:
+                    type: string
+                    description: 被关注人uid
+        GetFollowerUserListReply:
+            type: object
+            properties:
+                hasMore:
+                    type: integer
+                    format: int32
+                lastId:
+                    type: string
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/User'
+        GetFollowingUserListReply:
+            type: object
+            properties:
+                hasMore:
+                    type: integer
+                    format: int32
+                lastId:
+                    type: string
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/User'
+        GetPostReply:
+            type: object
+            properties:
+                post:
+                    $ref: '#/components/schemas/Post'
+        GetUserReply:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+        GoogleProtobufAny:
+            type: object
+            properties:
+                '@type':
+                    type: string
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        Like:
+            type: object
+            properties:
+                id:
+                    type: string
+                user:
+                    $ref: '#/components/schemas/User'
+        ListCommentLikeReply:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Like'
+                count:
+                    type: string
+                hasMore:
+                    type: boolean
+                lastId:
+                    type: string
+        ListCommentReply:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Comment'
+                count:
+                    type: string
+                hasMore:
+                    type: boolean
+                lastId:
+                    type: string
+        ListPostLikeReply:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Like'
+                count:
+                    type: string
+                hasMore:
+                    type: boolean
+                lastId:
+                    type: string
+        ListPostReply:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Post'
+                count:
+                    type: string
+                hasMore:
+                    type: boolean
+                lastId:
+                    type: string
+        ListReplyReply:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Comment'
+                count:
+                    type: string
+                hasMore:
+                    type: boolean
+                lastId:
+                    type: string
+        LoginReply:
+            type: object
+            properties:
+                uid:
+                    type: string
+                accessToken:
+                    type: string
+        LoginRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                email:
+                    type: string
+                password:
+                    type: string
+        LogoutReply:
+            type: object
+            properties: {}
+        LogoutRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                accessToken:
+                    type: string
+        Post:
+            type: object
+            properties:
+                id:
+                    type: string
+                postType:
+                    type: integer
+                    format: int32
+                user:
+                    $ref: '#/components/schemas/User'
+                title:
+                    type: string
+                content:
+                    $ref: '#/components/schemas/Content'
+                viewCount:
+                    type: string
+                likeCount:
+                    type: string
+                commentCount:
+                    type: string
+                collectCount:
+                    type: string
+                shareCount:
+                    type: string
+                longitude:
+                    type: number
+                    format: float
+                latitude:
+                    type: number
+                    format: float
+                position:
+                    type: number
+                    format: float
+                createdAt:
+                    type: string
+                isLike:
+                    type: integer
+                    format: int32
+        PostImage:
+            type: object
+            properties:
+                imageKey:
+                    type: string
+                imageUrl:
+                    type: string
+                imageType:
+                    type: string
+                width:
+                    type: integer
+                    format: int32
+                height:
+                    type: integer
+                    format: int32
+        PostImageRequest:
+            type: object
+            properties:
+                imageKey:
+                    type: string
+                imageType:
+                    type: string
+                width:
+                    type: integer
+                    format: int32
+                height:
+                    type: integer
+                    format: int32
+        RegisterReply:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+        RegisterRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                email:
+                    type: string
+                password:
+                    type: string
+        ReplyCommentReply:
+            type: object
+            properties:
+                comment:
+                    $ref: '#/components/schemas/Comment'
+        ReplyCommentRequest:
+            type: object
+            properties:
+                commentId:
+                    type: string
+                userId:
+                    type: string
+                content:
+                    type: string
+                rootId:
+                    type: string
+                parentId:
+                    type: string
+                deviceType:
+                    type: string
+                ip:
+                    type: string
+        Status:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+                    format: int32
+                message:
+                    type: string
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+        UnfollowReply:
+            type: object
+            properties: {}
+        UpdatePasswordReply:
+            type: object
+            properties: {}
+        UpdatePasswordRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                password:
+                    type: string
+                newPassword:
+                    type: string
+                confirmPassword:
+                    type: string
+        UpdatePostReply:
+            type: object
+            properties: {}
+        UpdatePostRequest:
+            type: object
+            properties: {}
+        UpdateUserReply:
+            type: object
+            properties: {}
+        UpdateUserRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                loginAt:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                nickname:
+                    type: string
+                avatar:
+                    type: string
+                gender:
+                    type: integer
+                    format: enum
+                birthday:
+                    type: string
+                bio:
+                    type: string
+                updatedAt:
+                    type: string
+        User:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                loginAt:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                nickname:
+                    type: string
+                avatar:
+                    type: string
+                gender:
+                    type: integer
+                    format: enum
+                birthday:
+                    type: string
+                bio:
+                    type: string
+                createdAt:
+                    type: string
+            description: user info
+        Video:
+            type: object
+            properties:
+                videoKey:
+                    type: string
+                videoUrl:
+                    type: string
+                coverKey:
+                    type: string
+                coverUrl:
+                    type: string
+                duration:
+                    type: number
+                    format: float
+                width:
+                    type: integer
+                    format: int32
+                height:
+                    type: integer
+                    format: int32
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+security:
+    - bearerAuth: []
+tags:
+    - name: CommentService
+      description: 评论服务
+    - name: LikeService
+      description: 点赞服务
+    - name: PostService
+      description: 帖子服务
+    - name: RelationService
+    - name: UserService
+      description: 用户服务
