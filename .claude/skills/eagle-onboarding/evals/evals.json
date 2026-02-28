@@ -1,0 +1,23 @@
+{
+  "skill_name": "eagle-onboarding",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我刚加入这个项目，能给我介绍一下项目的整体架构吗？我看到了 service、repository、dal 这些目录，它们之间是什么关系？",
+      "expected_output": "包含清晰的三层架构说明（Service -> Repository -> DAL），解释各层职责，并提供目录结构图和简单示例",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我需要添加一个新的 API 接口来获取用户的订单历史记录，应该怎么做？可以给我一个完整的步骤指导吗，包括 proto 定义、service、repository 等",
+      "expected_output": "完整的开发流程指导，从 proto 定义开始，依次说明每一层的实现步骤，包含具体的代码示例",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Wire 依赖注入是怎么工作的？我修改了代码后需要运行什么命令？如果我想添加一个新的 service，需要在哪里配置依赖关系？",
+      "expected_output": "解释 Wire 工作原理，说明 wire.go 和 ProviderSet 的作用，提供添加新依赖的具体步骤和示例代码",
+      "files": []
+    }
+  ]
+}
