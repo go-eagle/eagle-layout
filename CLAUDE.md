@@ -4,7 +4,7 @@
 
 ## 技术栈 (Tech Stack)
 
-- **语言 (Language)**: Go 1.22
+- **语言 (Language)**: Go 1.22+
 - **应用框架 (Framework)**: [Eagle](https://github.com/go-eagle/eagle) 微服务框架 (`go-eagle/eagle`)
 - **Web/HTTP**: Gin (`gin-gonic/gin`) + Swagger 文档 (`swaggo/gin-swagger`)
 - **RPC / 协议 (RPC / Protocol)**: gRPC (`google.golang.org/grpc`) + Protocol Buffers，带 `protoc-gen-validate` 参数校验
