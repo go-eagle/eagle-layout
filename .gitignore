@@ -24,3 +24,4 @@ coverage.out
 internal/dal/db/dao/gen_test.db
 bin
 .claude/settings.local.json
+eagle-course
