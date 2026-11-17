@@ -9,7 +9,7 @@ import (
 	amqp091 "github.com/rabbitmq/amqp091-go"
 )
 
-// 自定义消息处理函数
+// SendWelcomeEmailHandler handles the welcome-email queue message.
 func SendWelcomeEmailHandler(ctx context.Context, body amqp091.Delivery) (action rabbitmq.Action) {
 	msg := make(map[string]interface{})
 	err := json.Unmarshal(body.Body, &msg)

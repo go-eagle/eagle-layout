@@ -2,19 +2,20 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-eagle/eagle-layout/internal/service"
-	"github.com/go-eagle/eagle-layout/internal/types"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/errcode"
+
+	"github.com/go-eagle/eagle-layout/internal/service"
+	"github.com/go-eagle/eagle-layout/internal/types"
 )
 
-// LoginHandler 包含 UserService
+// LoginHandler handles username and password login.
 type LoginHandler struct {
-	UserService *service.UserService
+	UserService service.UserService
 }
 
-// NewLoginHandler 创建一个新的 LoginHandler
-func NewLoginHandler(userService *service.UserService) *LoginHandler {
+// NewLoginHandler creates a LoginHandler.
+func NewLoginHandler(userService service.UserService) *LoginHandler {
 	return &LoginHandler{UserService: userService}
 }
 

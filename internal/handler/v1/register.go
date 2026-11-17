@@ -2,19 +2,20 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-eagle/eagle-layout/internal/service"
-	"github.com/go-eagle/eagle-layout/internal/types"
 	"github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/errcode"
+
+	"github.com/go-eagle/eagle-layout/internal/service"
+	"github.com/go-eagle/eagle-layout/internal/types"
 )
 
-// RegisterHandler 包含 UserService
+// RegisterHandler handles user registration.
 type RegisterHandler struct {
-	UserService *service.UserService
+	UserService service.UserService
 }
 
-// NewRegisterHandler 创建一个新的 RegisterHandler
-func NewRegisterHandler(userService *service.UserService) *RegisterHandler {
+// NewRegisterHandler creates a RegisterHandler.
+func NewRegisterHandler(userService service.UserService) *RegisterHandler {
 	return &RegisterHandler{UserService: userService}
 }
 

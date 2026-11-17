@@ -11,10 +11,11 @@ import (
 )
 
 var (
-	// DB define a gloabl db
+	// DB is the process-wide gorm handle used by generated DAO code.
 	DB *gorm.DB
 )
 
+// DBClient is the database handle shared by repositories.
 type DBClient struct {
 	db *gorm.DB
 }
@@ -44,11 +45,14 @@ func Init() (*DBClient, func(), error) {
 	dao.SetDefault(DB)
 
 	cleanFunc := func() {
-		sqlDB.Close()
+		if closeErr := sqlDB.Close(); closeErr != nil {
+			log.Errorf("close db: %v", closeErr)
+		}
 	}
 	return &DBClient{db: DB}, cleanFunc, nil
 }
 
+// GetDB returns the underlying gorm DB.
 func (c *DBClient) GetDB() *gorm.DB {
 	return c.db
 }
@@ -63,6 +67,7 @@ func (c *DBClient) ExecTx(ctx context.Context, fn func(ctx context.Context) erro
 	})
 }
 
+// DBTx returns the transaction stored on ctx, or the default DB.
 func (c *DBClient) DBTx(ctx context.Context) *gorm.DB {
 	tx, ok := ctx.Value(contextTxKey{}).(*gorm.DB)
 	if ok {

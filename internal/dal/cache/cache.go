@@ -16,4 +16,5 @@ const (
 var CacheSet = wire.NewSet(
 	redis.Init,
 	NewUserCache,
+	NewUserTokenCache,
 )

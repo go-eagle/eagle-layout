@@ -8,11 +8,12 @@ import (
 	"github.com/spf13/pflag"
 	"gorm.io/gen"
 
-	"github.com/go-eagle/eagle-layout/internal/dal"
-	"github.com/go-eagle/eagle-layout/internal/dal/db/method"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	v "github.com/go-eagle/eagle/pkg/version"
+
+	"github.com/go-eagle/eagle-layout/internal/dal"
+	"github.com/go-eagle/eagle-layout/internal/dal/db/method"
 )
 
 var (
@@ -44,7 +45,11 @@ func main() {
 	// set global
 	eagle.Conf = &cfg
 
-	dal.Init()
+	_, cleanup, err := dal.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer cleanup()
 
 	g := gen.NewGenerator(gen.Config{
 		OutPath:           "./internal/dal/db/dao",                       // 生成的查询类代码的输出路径，默认./query, 这里改为dao

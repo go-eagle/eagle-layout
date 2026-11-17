@@ -1,10 +1,11 @@
 package server
 
 import (
-	"github.com/go-eagle/eagle-layout/internal/tasks"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	redisMQ "github.com/go-eagle/eagle/pkg/transport/consumer/redis"
 	"github.com/hibiken/asynq"
+
+	"github.com/go-eagle/eagle-layout/internal/tasks"
 )
 
 // NewRedisConsumerServer create a redis server

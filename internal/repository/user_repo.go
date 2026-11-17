@@ -1,6 +1,6 @@
 package repository
 
-//go:generate mockgen -source=user_repo.go -destination=../../internal/mocks/user_repo_mock.go  -package mocks
+//go:generate mockgen -source=user_repo.go -destination=../mocks/user_repo_mock.go -package=mocks
 
 import (
 	"context"
@@ -42,7 +42,7 @@ type userRepo struct {
 	sg         singleflight.Group
 }
 
-// NewUser new a repository and return
+// NewUserRepo creates a user repository.
 func NewUserRepo(db *dal.DBClient, cache cache.UserCache) UserRepo {
 	return &userRepo{
 		db:         db,
@@ -98,7 +98,11 @@ func (r *userRepo) GetUser(ctx context.Context, id int64) (ret *model.UserInfoMo
 			// cache not found and set empty cache to avoid 缓存穿透
 			// Note: 如果缓存空数据太多，会大大降低缓存命中率，可以改为使用布隆过滤器
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				r.cache.SetCacheWithNotFound(ctx, id)
+				// Keep the not-found error. A failed empty-cache write is attached
+				// so the cache error is not discarded.
+				if cacheErr := r.cache.SetCacheWithNotFound(ctx, id); cacheErr != nil {
+					err = errors.Wrapf(err, "set empty cache: %v", cacheErr)
+				}
 			}
 			return nil, errors.Wrapf(err, "[repo] GetUser get User from db error, id: %d", id)
 		}

@@ -16,9 +16,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-eagle/eagle-layout/internal/handler"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	"github.com/go-eagle/eagle/pkg/config"
 	logger "github.com/go-eagle/eagle/pkg/log"
@@ -69,25 +69,22 @@ func main() {
 	// init pprof server
 	go func() {
 		fmt.Printf("Listening and serving PProf HTTP on %s\n", cfg.PprofPort)
-		if err := http.ListenAndServe(cfg.PprofPort, http.DefaultServeMux); err != nil && err != http.ErrServerClosed {
+		pprofSrv := &http.Server{
+			Addr:              cfg.PprofPort,
+			Handler:           http.DefaultServeMux,
+			ReadHeaderTimeout: 5 * time.Second,
+		}
+		if err := pprofSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			panic(fmt.Sprintf("listen ListenAndServe for PProf, err: %+v", err))
 		}
 	}()
 
-	// init handler for http server that only use gin router
-	h, cleanup1, err := handler.NewHandler()
-	defer cleanup1()
+	// start app. HTTP handlers are constructed inside InitApp via Wire.
+	app, cleanup, err := InitApp(&cfg)
 	if err != nil {
 		panic(err)
 	}
-	handler.Handle = h
-
-	// start app
-	app, cleanup2, err := InitApp(&cfg)
-	defer cleanup2()
-	if err != nil {
-		panic(err)
-	}
+	defer cleanup()
 	if err := app.Run(); err != nil {
 		panic(err)
 	}

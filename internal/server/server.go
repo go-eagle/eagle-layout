@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/google/wire"
 
+	"github.com/go-eagle/eagle-layout/internal/handler"
 	"github.com/go-eagle/eagle-layout/internal/service"
 )
 
@@ -13,4 +14,5 @@ var ServerSet = wire.NewSet(
 	NewGRPCServer,
 	NewRedisConsumerServer,
 	service.ServiceSet,
+	handler.HandlerSet,
 )

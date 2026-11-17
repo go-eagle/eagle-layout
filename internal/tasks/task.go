@@ -13,16 +13,16 @@ const (
 	// QueueCritical queue priority high
 	QueueCritical = "critical"
 	// QueueDefault queue priority middle
-	QueueDefault  = "default"
+	QueueDefault = "default"
 	// QueueLow queue priority low
-	QueueLow      = "low"
+	QueueLow = "low"
 )
 
 var (
-    // client define a async client
+	// client define a async client
 	client *asynq.Client
 	// once define a lock for get async client
-	once   sync.Once
+	once sync.Once
 )
 
 // Config define a struct
@@ -37,7 +37,7 @@ type Config struct {
 		WriteTimeout time.Duration
 		PoolSize     int
 		PoolTimeout  time.Duration
-		Concurrency  int //并发数
+		Concurrency  int // worker count
 	}
 }
 

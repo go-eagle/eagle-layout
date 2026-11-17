@@ -7,12 +7,13 @@ import (
 	"github.com/go-eagle/eagle-layout/internal/server"
 
 	//"github.com/go-eagle/eagle-layout/internal/service"
-	"github.com/go-eagle/eagle-layout/internal/tasks"
 	eagle "github.com/go-eagle/eagle/pkg/app"
 	logger "github.com/go-eagle/eagle/pkg/log"
 	redisMQ "github.com/go-eagle/eagle/pkg/transport/consumer/redis"
 	httpSrv "github.com/go-eagle/eagle/pkg/transport/http"
 	"github.com/google/wire"
+
+	"github.com/go-eagle/eagle-layout/internal/tasks"
 )
 
 func InitApp(cfg *eagle.Config, config *eagle.ServerConfig, tc *tasks.Config) (*eagle.App, func(), error) {

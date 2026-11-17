@@ -21,6 +21,7 @@ eagle-layout
 cmd/consumer/consumer
 cmd/server/server
 coverage.out
+coverage.txt
 internal/dal/db/dao/gen_test.db
 bin
 .claude/settings.local.json
