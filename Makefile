@@ -1,6 +1,14 @@
 SHELL := /bin/bash
 BASEDIR = $(shell pwd)
 
+# Pinned so local runs and CI use the same tools.
+GOLANGCI_LINT_VERSION ?= v2.15.0
+MOCKGEN_VERSION ?= v0.5.1
+WIRE_VERSION ?= v0.6.0
+# Statement coverage gate for internal/service. The package is the reference
+# example and currently sits well above this floor.
+SERVICE_COVERAGE_MIN ?= 70
+
 # 可在make是带入参数进行替换
 # usage: SERVICE_NAME=eagle-service make build 
 SERVICE_NAME?=eagle-service
@@ -42,9 +50,10 @@ run: wire
 	go run cmd/server/main.go cmd/server/wire_gen.go
 
 .PHONY: wire
-# make wire, generate wire_gen.go
+# make wire, generate wire_gen.go for the server and the consumer
 wire:
-	cd cmd/server && wire
+	go run github.com/google/wire/cmd/wire@$(WIRE_VERSION) ./cmd/server
+	go run github.com/google/wire/cmd/wire@$(WIRE_VERSION) ./cmd/consumer
 
 .PHONY: fmt
 # make fmt
@@ -61,18 +70,25 @@ golint:
 	@golint -set_exit_status ${PKG_LIST}
 
 .PHONY: lint
-# make lint
+# make lint. Installs the pinned golangci-lint v2 binary when missing or outdated.
 lint:
-	@if ! which golangci-lint &>/dev/null; then \
-  		echo "Installing golangci-lint"; \
-  		go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0; \
-  	fi
-	${GOPATH}/bin/golangci-lint run ./...
+	@need_install=0; \
+	if ! command -v golangci-lint >/dev/null 2>&1; then need_install=1; \
+	elif ! golangci-lint version 2>/dev/null | grep -q "$(GOLANGCI_LINT_VERSION)"; then need_install=1; \
+	fi; \
+	if [ "$$need_install" -eq 1 ]; then \
+		echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION)"; \
+		curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$(shell go env GOPATH)/bin" $(GOLANGCI_LINT_VERSION); \
+	fi
+	golangci-lint run ./...
 
 .PHONY: test
-# make test
+# make test. Runs the race detector and writes a cover profile to coverage.out.
+# coverage.txt is the same profile, kept for the Codecov upload.
 test: vet
-	@go test -race -short ${PKG_LIST}
+	@go test -race -short -covermode=atomic -coverprofile=coverage.out ${PKG_LIST}
+	@cp coverage.out coverage.txt
+	@go tool cover -func=coverage.out | awk '/^total:/ {print}'
 
 .PHONY: vet
 # make vet
@@ -80,9 +96,26 @@ vet:
 	go vet ./... | grep -v vendor;true
 
 .PHONY: cover
-# make cover
+# make cover. Same profile as make test, without the race detector.
 cover:
-	@go test -short -coverprofile=coverage.out -covermode=atomic ${PKG_LIST}
+	@go test -short -covermode=atomic -coverprofile=coverage.out ${PKG_LIST}
+	@cp coverage.out coverage.txt
+	@go tool cover -func=coverage.out | awk '/^total:/ {print}'
+
+.PHONY: cover-check
+# make cover-check. Reads coverage.out from make test and fails under the service gate.
+cover-check:
+	@test -f coverage.out || { echo "coverage.out missing; run make test first"; exit 1; }
+	@awk -v min="$(SERVICE_COVERAGE_MIN)" '\
+		$$1 ~ /^github.com\/go-eagle\/eagle-layout\/internal\/service\// { \
+			stmts += $$2; if ($$3 > 0) covered += $$2; \
+		} \
+		END { \
+			if (stmts == 0) { print "no internal/service statements in coverage.out"; exit 1 } \
+			pct = 100 * covered / stmts; \
+			printf "service statement coverage: %.1f%% (%d/%d), minimum %s%%\n", pct, covered, stmts, min; \
+			if (pct + 0 < min + 0) exit 1; \
+		}' coverage.out
 
 .PHONY: view-cover
 # make view-cover  preview coverage report
@@ -134,14 +167,11 @@ graph:
 	@go-callvis github.com/go-eagle/eagle
 
 .PHONY: mockgen
-# make mockgen gen mock file
+# make mockgen. Regenerates committed mocks with go.uber.org/mock.
 mockgen:
-	@echo "downloading mockgen"
-	@go get github.com/golang/mock/mockgen
-	cd ./internal &&  for file in `egrep -rnl "type.*?interface" ./dao | grep -v "_test" `; do \
-		echo $$file ; \
-		cd .. && mockgen -destination="./internal/mock/$$file" -source="./internal/$$file" && cd ./internal ; \
-	done
+	go run go.uber.org/mock/mockgen@$(MOCKGEN_VERSION) -source=internal/repository/user_repo.go -destination=internal/mocks/user_repo_mock.go -package=mocks
+	go run go.uber.org/mock/mockgen@$(MOCKGEN_VERSION) -source=internal/service/user_svc.go -destination=internal/mocks/user_service_mock.go -package=mocks
+	go run go.uber.org/mock/mockgen@$(MOCKGEN_VERSION) -source=internal/dal/cache/user_token_cache.go -destination=internal/mocks/user_token_cache_mock.go -package=mocks
 
 .PHONY: init
 # init env
@@ -151,7 +181,7 @@ init:
 	go install github.com/google/gnostic@latest
 	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
 	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
-	go install github.com/golang/mock/mockgen@latest
+	go install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)
 	go install github.com/favadi/protoc-go-inject-tag@latest
 	go install github.com/envoyproxy/protoc-gen-validate@latest
 	go install github.com/gogo/protobuf/protoc-gen-gogo@latest

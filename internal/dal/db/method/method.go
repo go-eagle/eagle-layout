@@ -2,7 +2,7 @@ package method
 
 import "gorm.io/gen"
 
-// Dynamic SQL
+// Querier is the custom query API implemented by gorm/gen.
 type Querier interface {
 	// SELECT * FROM @@table WHERE username = @username
 	GetUserByUsername(username string) (*gen.T, error)

@@ -9,6 +9,8 @@ package main
 import (
 	"github.com/go-eagle/eagle-layout/internal/dal"
 	"github.com/go-eagle/eagle-layout/internal/dal/cache"
+	"github.com/go-eagle/eagle-layout/internal/handler"
+	"github.com/go-eagle/eagle-layout/internal/handler/v1"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/server"
 	"github.com/go-eagle/eagle-layout/internal/service"
@@ -34,8 +36,16 @@ func InitApp(cfg *app.Config, config *app.ServerConfig, tc *tasks.Config) (*app.
 	}
 	userCache := cache.NewUserCache(client)
 	userRepo := repository.NewUserRepo(dbClient, userCache)
-	userServiceServer := service.NewUserServiceServer(userRepo)
-	httpServer := server.NewHTTPServer(cfg, userServiceServer)
+	userTokenCache := cache.NewUserTokenCache(client)
+	userService := service.NewUserService(userRepo, userTokenCache)
+	userServiceServer := service.NewUserServiceServer(userService)
+	loginHandler := v1.NewLoginHandler(userService)
+	registerHandler := v1.NewRegisterHandler(userService)
+	handlerHandler := &handler.Handler{
+		Login:    loginHandler,
+		Register: registerHandler,
+	}
+	httpServer := server.NewHTTPServer(cfg, userServiceServer, handlerHandler)
 	redisServer := server.NewRedisConsumerServer(tc)
 	appApp := newApp(cfg, httpServer, redisServer)
 	return appApp, func() {

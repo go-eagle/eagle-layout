@@ -1,6 +1,6 @@
 package cache
 
-//go:generate mockgen -source=internal/cache/user_token_cache.go -destination=internal/mock/user_token_cache_mock.go  -package mock
+//go:generate mockgen -source=user_token_cache.go -destination=../../mocks/user_token_cache_mock.go -package=mocks
 
 import (
 	"context"
@@ -12,15 +12,18 @@ import (
 	"github.com/go-eagle/eagle/pkg/encoding"
 	"github.com/go-eagle/eagle/pkg/log"
 	"github.com/go-eagle/eagle/pkg/redis"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 const (
-	// PrefixUserTokenCacheKey cache prefix
+	// PrefixUserTokenCacheKey is the Redis key format for a user token.
+	// #nosec G101 -- format string, not a hardcoded credential.
 	PrefixUserTokenCacheKey = "user:token:%d"
-	UserTokenExpireTime     = 24 * time.Hour * 30
+	// UserTokenExpireTime is how long a login token stays in Redis.
+	UserTokenExpireTime = 24 * time.Hour * 30
 )
 
-// UserToken define cache interface
+// UserTokenCache stores login tokens in Redis.
 type UserTokenCache interface {
 	SetUserTokenCache(ctx context.Context, id int64, token string, duration time.Duration) error
 	GetUserTokenCache(ctx context.Context, id int64) (token string, err error)
@@ -32,12 +35,12 @@ type userTokenCache struct {
 	cache cache.Cache
 }
 
-// NewUserTokenCache new a cache
-func NewUserTokenCache() UserTokenCache {
+// NewUserTokenCache creates a token cache backed by the injected Redis client.
+func NewUserTokenCache(rdb *goredis.Client) UserTokenCache {
 	jsonEncoding := encoding.JSONEncoding{}
 	cachePrefix := ""
 	return &userTokenCache{
-		cache: cache.NewRedisCache(redis.RedisClient, cachePrefix, jsonEncoding, func() interface{} {
+		cache: cache.NewRedisCache(rdb, cachePrefix, jsonEncoding, func() interface{} {
 			return ""
 		}),
 	}

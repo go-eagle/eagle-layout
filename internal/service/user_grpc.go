@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/go-eagle/eagle-layout/api/user/v1"
-	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/types"
 )
 
@@ -17,17 +16,17 @@ var (
 	_ pb.UserServiceServer = (*UserServiceServer)(nil)
 )
 
-// UserServiceServer gRPC 服务端
+// UserServiceServer is the gRPC adapter over UserService.
 type UserServiceServer struct {
 	pb.UnimplementedUserServiceServer
 
-	userSvc *UserService
+	userSvc UserService
 }
 
-// NewUserServiceServer 创建 gRPC 服务端
-func NewUserServiceServer(repo repository.UserRepo) *UserServiceServer {
+// NewUserServiceServer creates the gRPC adapter.
+func NewUserServiceServer(userSvc UserService) *UserServiceServer {
 	return &UserServiceServer{
-		userSvc: NewUserService(repo),
+		userSvc: userSvc,
 	}
 }
 

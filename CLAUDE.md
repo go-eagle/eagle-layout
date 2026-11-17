@@ -102,10 +102,18 @@
 - `make gorm-gen` - 使用 `cmd/gen/generate.go` 生成 GORM 模型文件
 
 ### 测试与质量 (Testing and Quality)
-- `make test` - 运行带有竞态检测的测试
-- `make lint` - 运行 golangci-lint 进行代码质量检查
-- `make cover` - 生成测试覆盖率报告到 `coverage.txt`
+- `make test` - 运行带有竞态检测的测试，并写出覆盖率 profile（`coverage.out`，并复制为 Codecov 使用的 `coverage.txt`）
+- `make cover-check` - 读取 `coverage.out`，要求 `internal/service` 语句覆盖率不低于 70%
+- `make lint` - 运行固定版本的 golangci-lint v2（见 Makefile 中的 `GOLANGCI_LINT_VERSION`）
+- `make mockgen` - 用 `go.uber.org/mock` 重新生成 `internal/mocks` 下已提交的 mock
+- `make cover` - 不带竞态检测，重新生成覆盖率报告到 `coverage.txt`
 - `make view-cover` - 生成并查看 HTML 覆盖率报告
+
+参考示例（给后续贡献者和 AI 工具）：
+- 表驱动 service 测试：`internal/service/user_svc_auth_test.go`、`internal/service/user_svc_profile_test.go`
+- gRPC 适配层测试：`internal/service/user_grpc_test.go`
+- `net/http/httptest` handler 测试：`internal/handler/v1/auth_handler_test.go`
+- mock：`internal/mocks`（`UserRepo`、`UserService`、`UserTokenCache`）
 
 ### 文档 (Documentation)
 - `make docs` - 生成 Swagger 文档（可通过 http://localhost:8080/swagger/index.html 访问）

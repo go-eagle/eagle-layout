@@ -5,33 +5,78 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-eagle/eagle/pkg/app"
+	"github.com/go-eagle/eagle/pkg/auth"
+	"github.com/go-eagle/eagle/pkg/errcode"
+
 	"github.com/go-eagle/eagle-layout/internal/dal/cache"
 	"github.com/go-eagle/eagle-layout/internal/dal/db/model"
 	"github.com/go-eagle/eagle-layout/internal/ecode"
 	"github.com/go-eagle/eagle-layout/internal/repository"
 	"github.com/go-eagle/eagle-layout/internal/tasks"
 	"github.com/go-eagle/eagle-layout/internal/types"
-	"github.com/go-eagle/eagle/pkg/app"
-	"github.com/go-eagle/eagle/pkg/auth"
-	"github.com/go-eagle/eagle/pkg/errcode"
 
 	pb "github.com/go-eagle/eagle-layout/api/user/v1"
 )
 
-// UserService 用户业务服务
-type UserService struct {
-	repo repository.UserRepo
+//go:generate mockgen -source=user_svc.go -destination=../mocks/user_service_mock.go -package=mocks
+
+// UserService is the user business API consumed by HTTP handlers and the gRPC adapter.
+type UserService interface {
+	Register(ctx context.Context, input types.RegisterInput) (*types.RegisterOutput, error)
+	Login(ctx context.Context, input types.LoginInput) (*types.LoginOutput, error)
+	Logout(ctx context.Context, input types.LogoutInput) (*types.LogoutOutput, error)
+	CreateUser(ctx context.Context, input types.CreateUserInput) (*types.CreateUserOutput, error)
+	UpdateUser(ctx context.Context, input types.UpdateUserInput) (*types.UpdateUserOutput, error)
+	UpdatePassword(ctx context.Context, input types.UpdatePasswordInput) (*types.UpdatePasswordOutput, error)
+	GetUser(ctx context.Context, input types.GetUserInput) (*types.GetUserOutput, error)
+	BatchGetUsers(ctx context.Context, input types.BatchGetUsersInput) (*types.BatchGetUsersOutput, error)
 }
 
-// NewUserService 创建用户业务服务
-func NewUserService(repo repository.UserRepo) *UserService {
-	return &UserService{
-		repo: repo,
+// userService implements UserService.
+//
+// tokens, enqueueWelcome and signToken are explicit dependencies so unit tests
+// can replace Redis and the task queue. Production wiring keeps the real cache,
+// asynq enqueue and JWT signer.
+type userService struct {
+	repo           repository.UserRepo
+	tokens         cache.UserTokenCache
+	enqueueWelcome func(tasks.EmailWelcomePayload) error
+	signToken      func(ctx context.Context, payload map[string]interface{}, secret string, timeout int64) (string, error)
+	// jwtSecret overrides app.Conf when tests need a stable signing key.
+	jwtSecret string
+}
+
+// NewUserService creates the user business service.
+func NewUserService(repo repository.UserRepo, tokens cache.UserTokenCache) UserService {
+	return newUserService(repo, tokens, nil, "")
+}
+
+func newUserService(repo repository.UserRepo, tokens cache.UserTokenCache, enqueue func(tasks.EmailWelcomePayload) error, jwtSecret string) *userService {
+	if enqueue == nil {
+		enqueue = tasks.NewEmailWelcomeTask
+	}
+	return &userService{
+		repo:           repo,
+		tokens:         tokens,
+		enqueueWelcome: enqueue,
+		signToken:      app.Sign,
+		jwtSecret:      jwtSecret,
 	}
 }
 
+func (s *userService) tokenSecret() string {
+	if s.jwtSecret != "" {
+		return s.jwtSecret
+	}
+	if app.Conf == nil {
+		return ""
+	}
+	return app.Conf.JwtSecret
+}
+
 // Register 用户注册
-func (s *UserService) Register(ctx context.Context, input types.RegisterInput) (*types.RegisterOutput, error) {
+func (s *userService) Register(ctx context.Context, input types.RegisterInput) (*types.RegisterOutput, error) {
 	// 检查邮箱是否存在
 	userBase, err := s.repo.GetUserByEmail(ctx, input.Email)
 	if err != nil {
@@ -66,8 +111,8 @@ func (s *UserService) Register(ctx context.Context, input types.RegisterInput) (
 		return nil, fmt.Errorf("[UserService] Register CreateUser error: %w", err)
 	}
 
-	// 发送欢迎邮件
-	err = tasks.NewEmailWelcomeTask(tasks.EmailWelcomePayload{UserID: uid})
+	// Send a welcome email. Failure is returned so the caller can retry.
+	err = s.enqueueWelcome(tasks.EmailWelcomePayload{UserID: uid})
 	if err != nil {
 		return nil, fmt.Errorf("[UserService] Register NewEmailWelcomeTask error: %w", err)
 	}
@@ -79,7 +124,7 @@ func (s *UserService) Register(ctx context.Context, input types.RegisterInput) (
 }
 
 // Login 用户登录
-func (s *UserService) Login(ctx context.Context, input types.LoginInput) (*types.LoginOutput, error) {
+func (s *userService) Login(ctx context.Context, input types.LoginInput) (*types.LoginOutput, error) {
 	var user *model.UserInfoModel
 	var err error
 
@@ -104,15 +149,14 @@ func (s *UserService) Login(ctx context.Context, input types.LoginInput) (*types
 		return nil, ecode.ErrPasswordIncorrect
 	}
 
-	// 生成 token
+	// Sign a token and store it so logout can revoke it.
 	payload := map[string]interface{}{"user_id": user.ID, "username": user.Username}
-	token, err := app.Sign(ctx, payload, app.Conf.JwtSecret, int64(cache.UserTokenExpireTime))
+	token, err := s.signToken(ctx, payload, s.tokenSecret(), int64(cache.UserTokenExpireTime))
 	if err != nil {
 		return nil, ecode.ErrToken
 	}
 
-	// 记录 token 到 redis
-	err = cache.NewUserTokenCache().SetUserTokenCache(ctx, user.ID, token, cache.UserTokenExpireTime)
+	err = s.tokens.SetUserTokenCache(ctx, user.ID, token, cache.UserTokenExpireTime)
 	if err != nil {
 		return nil, ecode.ErrToken
 	}
@@ -124,11 +168,8 @@ func (s *UserService) Login(ctx context.Context, input types.LoginInput) (*types
 }
 
 // Logout 用户登出
-func (s *UserService) Logout(ctx context.Context, input types.LogoutInput) (*types.LogoutOutput, error) {
-	c := cache.NewUserTokenCache()
-
-	// 检查 token
-	token, err := c.GetUserTokenCache(ctx, input.ID)
+func (s *userService) Logout(ctx context.Context, input types.LogoutInput) (*types.LogoutOutput, error) {
+	token, err := s.tokens.GetUserTokenCache(ctx, input.ID)
 	if err != nil {
 		return nil, ecode.ErrToken
 	}
@@ -136,8 +177,7 @@ func (s *UserService) Logout(ctx context.Context, input types.LogoutInput) (*typ
 		return nil, ecode.ErrAccessDenied
 	}
 
-	// 从缓存中删除 token
-	err = c.DelUserTokenCache(ctx, input.ID)
+	err = s.tokens.DelUserTokenCache(ctx, input.ID)
 	if err != nil {
 		return nil, ecode.ErrInternalError
 	}
@@ -146,7 +186,7 @@ func (s *UserService) Logout(ctx context.Context, input types.LogoutInput) (*typ
 }
 
 // CreateUser 创建用户
-func (s *UserService) CreateUser(ctx context.Context, input types.CreateUserInput) (*types.CreateUserOutput, error) {
+func (s *userService) CreateUser(ctx context.Context, input types.CreateUserInput) (*types.CreateUserOutput, error) {
 	// 生成密码哈希
 	pwd, err := auth.HashAndSalt(input.Password)
 	if err != nil {
@@ -170,7 +210,7 @@ func (s *UserService) CreateUser(ctx context.Context, input types.CreateUserInpu
 }
 
 // UpdateUser 更新用户
-func (s *UserService) UpdateUser(ctx context.Context, input types.UpdateUserInput) (*types.UpdateUserOutput, error) {
+func (s *userService) UpdateUser(ctx context.Context, input types.UpdateUserInput) (*types.UpdateUserOutput, error) {
 	if input.UserId == 0 {
 		return nil, ecode.ErrInvalidArgument
 	}
@@ -203,7 +243,7 @@ func (s *UserService) UpdateUser(ctx context.Context, input types.UpdateUserInpu
 }
 
 // UpdatePassword 更新密码
-func (s *UserService) UpdatePassword(ctx context.Context, input types.UpdatePasswordInput) (*types.UpdatePasswordOutput, error) {
+func (s *userService) UpdatePassword(ctx context.Context, input types.UpdatePasswordInput) (*types.UpdatePasswordOutput, error) {
 	if input.ID == 0 {
 		return nil, ecode.ErrInvalidArgument
 	}
@@ -248,7 +288,7 @@ func (s *UserService) UpdatePassword(ctx context.Context, input types.UpdatePass
 }
 
 // GetUser 获取用户
-func (s *UserService) GetUser(ctx context.Context, input types.GetUserInput) (*types.GetUserOutput, error) {
+func (s *userService) GetUser(ctx context.Context, input types.GetUserInput) (*types.GetUserOutput, error) {
 	user, err := s.repo.GetUser(ctx, input.ID)
 	if err != nil {
 		return nil, fmt.Errorf("[UserService] GetUser GetUser error: %w", err)
@@ -265,7 +305,7 @@ func (s *UserService) GetUser(ctx context.Context, input types.GetUserInput) (*t
 }
 
 // BatchGetUsers 批量获取用户
-func (s *UserService) BatchGetUsers(ctx context.Context, input types.BatchGetUsersInput) (*types.BatchGetUsersOutput, error) {
+func (s *userService) BatchGetUsers(ctx context.Context, input types.BatchGetUsersInput) (*types.BatchGetUsersOutput, error) {
 	if len(input.IDs) == 0 {
 		return nil, ecode.ErrInvalidArgument
 	}
@@ -300,7 +340,7 @@ func (s *UserService) BatchGetUsers(ctx context.Context, input types.BatchGetUse
 }
 
 // newUser 创建用户模型
-func (s *UserService) newUser(username, email, password string) (model.UserInfoModel, error) {
+func (s *userService) newUser(username, email, password string) (model.UserInfoModel, error) {
 	return model.UserInfoModel{
 		Username:  username,
 		Email:     email,
@@ -311,7 +351,7 @@ func (s *UserService) newUser(username, email, password string) (model.UserInfoM
 }
 
 // convertUser 转换用户模型
-func (s *UserService) convertUser(u *model.UserInfoModel) (*types.User, error) {
+func (s *userService) convertUser(u *model.UserInfoModel) (*types.User, error) {
 	if u == nil {
 		return nil, nil
 	}
