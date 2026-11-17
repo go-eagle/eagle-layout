@@ -9,6 +9,15 @@ WIRE_VERSION ?= v0.6.0
 # example and currently sits well above this floor.
 SERVICE_COVERAGE_MIN ?= 70
 
+# Go 1.22's internal linker does not emit LC_UUID. macOS 15.4+ dyld aborts
+# those binaries, so pure-Go `go test -race` dies with "missing LC_UUID".
+# cgo packages already use the system linker and are unaffected. Force
+# external linking on Darwin so every test binary gets an LC_UUID.
+HOST_OS := $(shell uname -s)
+ifeq ($(HOST_OS),Darwin)
+TEST_LINKMODE := -ldflags=-linkmode=external
+endif
+
 # 可在make是带入参数进行替换
 # usage: SERVICE_NAME=eagle-service make build 
 SERVICE_NAME?=eagle-service
@@ -86,7 +95,7 @@ lint:
 # make test. Runs the race detector and writes a cover profile to coverage.out.
 # coverage.txt is the same profile, kept for the Codecov upload.
 test: vet
-	@go test -race -short -covermode=atomic -coverprofile=coverage.out ${PKG_LIST}
+	@go test -race -short -covermode=atomic -coverprofile=coverage.out $(TEST_LINKMODE) ${PKG_LIST}
 	@cp coverage.out coverage.txt
 	@go tool cover -func=coverage.out | awk '/^total:/ {print}'
 
@@ -98,7 +107,7 @@ vet:
 .PHONY: cover
 # make cover. Same profile as make test, without the race detector.
 cover:
-	@go test -short -covermode=atomic -coverprofile=coverage.out ${PKG_LIST}
+	@go test -short -covermode=atomic -coverprofile=coverage.out $(TEST_LINKMODE) ${PKG_LIST}
 	@cp coverage.out coverage.txt
 	@go tool cover -func=coverage.out | awk '/^total:/ {print}'
 
